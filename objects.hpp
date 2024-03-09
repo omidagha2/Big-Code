@@ -3,6 +3,12 @@
 using namespace std;
 
 const int SKILLS_IMPLEMENTED = 2;
+enum STAGE{
+    START_MENU,
+    LVL1,
+    LVL2,
+    LVL3
+};
 
 enum USETYPE{
     consumable,
@@ -27,12 +33,15 @@ enum STATE{
 
 class item{
 protected:
+    string name;
     int use_limit;
     int uses_left;
     int size;
 
 public:
-    item(int argU_Limit, int argU_Left, int argSize);
+    item(string argName, int argU_Limit, int argU_Left, int argSize);
+    string getname();
+    void setName(string argName);
 };
 
 class weapon: public item{
@@ -40,8 +49,8 @@ protected:
     MOD modifier;
     int dmg;
 public:
-    weapon(MOD argMod, int argDMG, int argSize)
-    :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG){};
+    weapon(string argName, MOD argMod, int argDMG, int argSize)
+    :item(argName, infinite, infinite, argSize), modifier(argMod), dmg(argDMG){};
     
     virtual void attack(entity*){};
 };
@@ -54,35 +63,31 @@ class melee: public weapon{
 
 };
 
-class pistol: public firearm{
+// class pistol: public firearm{
 
-};
+// };
 
-class rifle: public firearm{
+// class rifle: public firearm{
 
-};
+// };
 
-class grenade_launcher: public firearm{
+// class grenade_launcher: public firearm{
 
-};
+// };
 
-class knife: public melee{
+// class knife: public melee{
 
-};
+// };
 
-class club: public melee{
+// class club: public melee{
 
-};
+// };
 
 class consumable: public item{
 
 };
 
 class throwable: public consumable{
-
-};
-
-class status_item: public consumable{
 
 };
 
@@ -132,13 +137,13 @@ class HumanEnemy: public human{
 
 };
 
-class HenchMan: public HumanEnemy{
+// class HenchMan: public HumanEnemy{
 
-};
+// };
 
-class HumanBoss: public HumanEnemy{
+// class HumanBoss: public HumanEnemy{
 
-};
+// };
 
 class zombie: public enemy{
 
@@ -155,5 +160,5 @@ class Juggernaut: public zombie{
 
 
 class Game{
-//menu, sprite shown, etc
+    STAGE stage;
 };
