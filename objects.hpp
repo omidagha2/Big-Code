@@ -1,6 +1,9 @@
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
+
+class entity;
 
 const int SKILLS_IMPLEMENTED = 2;
 enum STAGE{
@@ -31,6 +34,18 @@ enum STATE{
 
 };
 
+//todo: use templates to make more reusable
+class dict{
+    vector<string> keys;
+    vector<double> values;
+
+public:
+    dict(vector<string> argKeys, vector<double> argVals){
+        keys = argKeys;
+        values = argVals;
+    };
+};
+
 class item{
 protected:
     string name;
@@ -39,7 +54,8 @@ protected:
     int size;
 
 public:
-    item(string argName, int argU_Limit, int argU_Left, int argSize);
+    item(string argName, int argU_Limit, int argU_Left, int argSize)
+    :name(argName), use_limit(argU_Limit), uses_left(argU_Left), size(argSize){};
     string getname();
     void setName(string argName);
 };
@@ -106,23 +122,38 @@ protected:
     int sta;
 
 public:
-    virtual void attack(entity*)=0;
+    // virtual void attack(entity*)=0;
+    void hi(){};
 
     entity();
-    entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
+    entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){};
 
 };
 
 class human: public entity{
 protected:
-    item item_at_hand;
+    item* item_at_hand;
     vector<item> inventory;
     int skills[SKILLS_IMPLEMENTED];
 
 public: 
-    virtual void attack(entity*);
-    void changeHeldItem();
+    human(string argName, int argAge, string argGender, vector<item> argInv, item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
+    :entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA){
+        item_at_hand = argItemAtHandPTR;
+        inventory = argInv;
+    };
+    virtual void attack(entity*){};
+    void changeHeldItem(item* argItem){item_at_hand = argItem;};
+    string getname(){return name;};
+    vector<item>* getInv(){return &inventory;};
+};
+
+class player: public human{
+
+public:
+    player(string argName, int argAge, string argGender, vector<item> argInv={}, item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
+    :human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
 };
 
 class enemy: public entity{
@@ -157,8 +188,25 @@ class Juggernaut: public zombie{
 
 };
 
-
+class MENU{
+    vector<string> choices;
+    
+public:
+    void choice1(){};
+    void choice2(){};
+    void choice3(){};
+    //...
+};
 
 class Game{
     STAGE stage;
+    MENU startmenu;
+};
+
+class COMBAT{
+    //has a return result function. currently a stub
+    vector<entity*> enemies;
+    vector<entity*> allies;
+
+
 };
