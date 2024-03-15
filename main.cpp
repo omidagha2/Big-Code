@@ -4,13 +4,17 @@ using namespace std;
 
 
 int main(){
-    item a("a gun", 10, 10, 1);
-    vector<item> v;
-    v.push_back(a);
-    human n("michael", 12, "male", v);
-    cout << n.getname();
-//assume combat.
-
-
+//assume combat
+    human michael("michael", 12, "male");
+    HumanEnemy boss1("bruh", 9, "female");
+    
+    COMBAT combat(&michael, &boss1);
+    
+    //how combat?
+    //there should be rewards, consumable & coins.
+    //there should be turns
+    //after each turn, update inventories, update hp, pass turn. (currently for one player vs. one enemy only) 
+    //not in combat function, maybe take care of get_damaged and/or other stuff like that inside the player & other guy functions
+    
 }
 
