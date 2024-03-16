@@ -1,6 +1,9 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <windows.h>
+#include <conio.h>
+
 using namespace std;
 
 const int SKILLS_IMPLEMENTED = 2;
@@ -33,7 +36,8 @@ protected:
     int size;
 
 public:
-    item(int argU_Limit, int argU_Left, int argSize);
+    item(int argU_Limit, int argU_Left, int argSize){}
+    item(){}
 };
 
 class weapon: public item{
@@ -42,9 +46,9 @@ protected:
     int dmg;
 public:
     weapon(MOD argMod, int argDMG, int argSize)
-    :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG){};
+    :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG){}
     
-    virtual void attack(entity* x){};
+    //virtual void attack(entity*){};
 };
 
 class firearm: public weapon{
@@ -102,11 +106,11 @@ protected:
     int sta;
 
 public:
-    virtual void attack(entity* x)=0;
+    //virtual void attack(entity*)=0;
 
-    entity();
+    entity(){}
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
-    :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){};
+    :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){}
     string getname() const {return name;}
     int getlvl() {return lvl;}
     int getdmg() {return dmg;}
@@ -124,8 +128,8 @@ public:
     : entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA),item_at_hand(0,0,0) {
         
     }
-    human();
-    virtual void attack(entity* x);
+    human(){}
+   // virtual void attack(entity*);
     void changeHeldItem();
    
 };
@@ -158,8 +162,3 @@ public:
         
     }
 };
-int main()
-{
-    characters x;
-    x.displaychars();
-}
