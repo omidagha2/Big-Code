@@ -8,7 +8,7 @@
 int main()
 {
     string name;
-    int age,x;
+    int age;
     char y;
     cout << "enter your name: ";
     getline(cin , name);
@@ -26,13 +26,12 @@ int main()
     while(true){
     cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
     y =_getch();
-    x = y - '0';
     characters ch;
-    if (x==1)
+    if (y=='1')
     {
         ch.displaychars();
         cin.get();
-    } else if (x==2){
+    } else if (y=='2'){
         cin.get();
     } else {
         cout << "unvalid choice\n";
