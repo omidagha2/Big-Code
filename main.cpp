@@ -14,15 +14,13 @@ int main()
     getline(cin , name);
     cout << "enter your age: ";
     cin >> age;
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-
+    setConsoleColor(1);
     cout << "\nWELLCOME TO ";
-    SetConsoleTextAttribute(hConsole,FOREGROUND_RED); 
+    setConsoleColor(2);
     cout << "IUSTZ ";
-    SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+    setConsoleColor(1);
     cout << "GAME " << name << "\n\n";
-    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    setConsoleColor(5);
     while(true){
     cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
     y =_getch();
