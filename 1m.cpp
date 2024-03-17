@@ -188,4 +188,8 @@ class HumanBoss: public HumanEnemy{
 
 };
 
-  
+void setConsoleColor(int color){
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    cout.flush();
+    SetConsoleTextAttribute(hConsole, color);
+}
