@@ -141,15 +141,15 @@ public:
       characters() {
         // Directly initialize the characters in the constructor
         chars.emplace_back("Thalion", 20, "Male", 1, 100, 10, 10);
-        chars.emplace_back("Eirwyn", 25, "Male", 2, 110, 20, 20);
-        chars.emplace_back("Brondar", 20, "Male", 3, 120, 20, 30);
-        chars.emplace_back("Mirelle", 20, "Female", 4, 150, 45, 35);
-        chars.emplace_back("Kaelum", 20, "Male", 5, 200, 50, 50);
-        chars.emplace_back("Seraphina", 20, "Female", 5, 190, 60, 45); 
-        chars.emplace_back("Draxen", 20, "Male", 2, 105, 20, 25);
-        chars.emplace_back("Arianya", 20, "Female", 3, 130, 10, 35);
-        chars.emplace_back("Fenris", 20, "Male", 7, 300, 65, 40);
-        chars.emplace_back("Lyrielle", 20, "Female", 10, 500, 100, 100);
+        chars.emplace_back("Eirwyn", 25, "Male", 1, 110, 20, 20);
+        chars.emplace_back("Brondar", 20, "Male", 1, 120, 20, 30);
+        chars.emplace_back("Mirelle", 20, "Female", 1, 150, 45, 35);
+        chars.emplace_back("Kaelum", 20, "Male", 1, 200, 50, 50);
+        chars.emplace_back("Seraphina", 20, "Female", 1, 190, 60, 45); 
+        chars.emplace_back("Draxen", 20, "Male", 1, 105, 20, 25);
+        chars.emplace_back("Arianya", 20, "Female", 1, 130, 10, 35);
+        chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
+        chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
     }
     
     void displaychars(){
@@ -162,3 +162,30 @@ public:
         
     }
 };
+class HumanEnemy: public human{
+     bool isboss;
+public:
+    HumanEnemy(bool boss=false):isboss(boss) {}
+};
+class enemies: public HumanEnemy{
+    vector<human> enemy;
+public:
+    enemies() {
+        enemy.emplace_back("Stenchurion", 20, "Male", 1, 100, 5, 15);
+        enemy.emplace_back("Cannibelle", 20, "Female", 1, 100, 7, 10);
+        enemy.emplace_back("Magmalice", 20, "Male", 1, 200, 15, 10);
+        enemy.emplace_back("Salamarauder", 20, "Female", 1, 150, 10, 15);
+        enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 15, 10);
+        enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
+
+    }
+};
+class HenchMan: public HumanEnemy{
+
+};
+
+class HumanBoss: public HumanEnemy{
+
+};
+
+  
