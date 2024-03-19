@@ -19,9 +19,7 @@ enum UseType{
 };
 
 enum class DamageType{
-    SLICE,
-    IMPACT,
-
+    SLICE, IMPACT,
 };
 
 
@@ -30,7 +28,12 @@ enum class MOD{
     //...
 };
 
-enum class EnemyState{
+enum class EnemyStatesSimple: int{//states can be integer coded (represented by integers, like state 0, 1, 12, ...) so we want the integer operators, but also would be good to have them scoped. is this the right way to do this? again, syntax highlighting isn't working ت
+    Entry,
+    LowHP,
+    LowSTA,
+    Fine,
+
 
 };
 
@@ -67,11 +70,14 @@ public:
     :name(argName), use_limit(argU_Limit), uses_left(argU_Left), size(argSize){};
     string getname(){return name;};
     void setName(string argName){name = argName;};
-    string type(){
-        if (dynamic_cast<Weapon*>(this) != nullptr) return "weapon";
-        elif (dynamic_cast<consumable*>(this) != nullptr) return "consumable";
-        //...
-    }
+
+    //!needs fixing
+    // string type(){
+    //     if (dynamic_cast<Weapon*>(this) != nullptr) {return "weapon";}
+    //     elif (dynamic_cast<Consumable*>(this) != nullptr){ return "consumable"};
+    //     //...
+    // }
+
     int getUseLimit(){return use_limit;}
     int getUsesLeft(){return uses_left;}
     void decrementUsesLeft(int num=1){uses_left-= num;}
@@ -134,7 +140,7 @@ class Healing: public Consumable{
 
 class StaminaRecovery: public Consumable{
     int value;
-}
+};
 
 
 class Entity{
@@ -144,7 +150,7 @@ protected:
     int age;
     string gender; 
     int lvl;
-    int hp;
+    int hp; //maybe hp can instead be a percentage of the max hp, to get rid of some ai calculations
     int max_hp;
     int dmg;
     int sta;
@@ -176,16 +182,17 @@ public:
     string getname(){return name;}
     vector<Item>* getInv(){return &inventory;}
 
-    void consume(Consumable* item){//currently only for healing
-        if (item->getUseLimit() == CONSUMABLE){item->decrementUsesLeft();}
-        if (dynamic_cast<Healing>(item) != nullptr){ //?does this do the cast here? I've assumed it does
-            hp+= item->value;
-            if (hp > max_hp) hp = max_hp;
-        }
-        if (item->getUsesLeft() <= 0){
-            //remove from inventory (syntax highlighting and suggestions not working)
-        }
-    }
+    //!again needs fixing (dynamic cast throwing errors)
+    // void consume(Consumable* item){//currently only for healing
+    //     if (item->getUseLimit() == CONSUMABLE){item->decrementUsesLeft();}
+    //     if (dynamic_cast<Healing*>(item) != nullptr){ //?does this do the cast here? I've assumed it does
+    //         hp+= item->value;
+    //         if (hp > max_hp) hp = max_hp;
+    //     }
+    //     if (item->getUsesLeft() <= 0){
+    //         //remove from inventory (syntax highlighting and suggestions not working can't code without)
+    //     }
+    // }
     
 };
 
@@ -196,10 +203,10 @@ public:
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
 };
 
-class Enemy: public Entity{
+class EnemySimple: public Entity{
 protected:
-    EnemyState current_State;
-    vector<EnemyState> available_States;
+    EnemyStatesSimple current_State;
+    // vector<EnemyStatesSimple> available_States;
 public:
     void attack(Human*);
 };
@@ -234,12 +241,12 @@ public:
     
     //currently finish the fine State. States only change modifiers for now
 
-    int evaluate(){ //this would mean you have to create new objects to evaluate every time. 
-        return hp + sta;
-    };
+    // int evaluate(){ //this would mean you have to create new objects to evaluate every time. 
+    //     return hp + sta;
+    // };
 
     int useEfficiency(){
-        //Items should have a max stat? giving thing
+        //if items had a max usage variable things would be very easy here. however, it would be harder when we get to making the factory and level generators.
     };
 
     void use(Item thing){};
@@ -253,8 +260,8 @@ public:
 
 // };
 
-class zombie: public Enemy{
-
+class zombie: public EnemySimple{
+    
 };
 
 class CommonHusk: public zombie{
@@ -297,6 +304,8 @@ public:
             //prompt user
             //do player actions
             //do enemy actions
+            //TODO the main point of a controller is to restrict user access to through a controllable structure. No need to hold all the logic here, specifically it's ok to have entity classes modify their items.   
+            //:enemies have (restricted, not friend) access to their items, and some info functions like eval and use efficiency. combat related stuff, like states and etc are gonna be in combat controller.
         };
     };
     Entity& getFriend(){return the_friend;};
@@ -305,9 +314,9 @@ public:
     
 };
 
-HumanEnemy Human_enemy_generator(int lvl){
+// HumanEnemy Human_enemy_generator(int lvl){
 
-}
+// }
 
 class Display{};
 class SombatDisplay: public Display{};
