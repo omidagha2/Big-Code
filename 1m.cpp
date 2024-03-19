@@ -30,6 +30,17 @@ enum STATE{
 };
 
 class item{
+private:
+    string Kalashnikov;
+    string pistol;
+    string graneid;
+    string m16;
+    string sks;
+    string m14;
+    string knife;
+    string bandaids;
+    string adrenaline;
+    string exir_st;
 protected:
     int use_limit;
     int uses_left;
@@ -48,52 +59,9 @@ public:
     weapon(MOD argMod, int argDMG, int argSize)
     :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG){}
     
-    //virtual void attack(entity*){};
+     
 };
 
-class firearm: public weapon{
-
-};
-
-class melee: public weapon{
-
-};
-
-class pistol: public firearm{
-
-};
-
-class rifle: public firearm{
-
-};
-
-class grenade_launcher: public firearm{
-
-};
-
-class knife: public melee{
-
-};
-
-class club: public melee{
-
-};
-
-class consumable: public item{
-
-};
-
-class throwable: public consumable{
-
-};
-
-class status_item: public consumable{
-
-};
-
-class recovery_item: public consumable{
-
-};
 
 class entity{
 protected:
@@ -106,9 +74,9 @@ protected:
     int sta;
 
 public:
-    //virtual void attack(entity*)=0;
+    virtual void attack(entity* x)=0;
 
-    entity(){}
+    entity()=default;
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){}
     string getname() const {return name;}
@@ -129,7 +97,7 @@ public:
         
     }
     human(){}
-   // virtual void attack(entity*);
+    virtual void attack(entity* x){}
     void changeHeldItem();
    
 };
@@ -161,6 +129,11 @@ public:
         }
         
     }
+    bool isDefeated() const {
+
+        return hp <= 0;
+    }
+
 };
 class HumanEnemy: public human{
      bool isboss;
