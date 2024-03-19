@@ -5,10 +5,10 @@ using namespace std;
 
 int main(){
 //assume combat
-    human michael("michael", 12, "male");
+    Human michael("michael", 12, "male");
     HumanEnemy boss1("bruh", 9, "female");
     
-    COMBAT combat(&michael, &boss1);
+    CombatController combat(michael, boss1);
     
     //how combat?
     //there should be rewards, consumable & coins.

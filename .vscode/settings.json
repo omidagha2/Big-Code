@@ -1,6 +1,9 @@
 {
+    "editor.fontFamily": "source code pro",
     "files.associations": {
         "xstring": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "fstream": "cpp",
+        "system_error": "cpp"
     }
 }
