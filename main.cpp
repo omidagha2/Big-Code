@@ -17,14 +17,14 @@ int main()
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
 
-    cout << "\nWELLCOME TO ";
+    cout << "\nWELCOME TO ";
     SetConsoleTextAttribute(hConsole,FOREGROUND_RED); 
     cout << "IUSTZ ";
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
     cout << "GAME " << name << "\n\n";
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
     while(true){
-    cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
+    cout << "1.existing" << "\n2.custom\n" << "(press \"1\" to choose among existing characters and \"2\" to create a custom character)\n";
     y =_getch();
     characters ch;
     if (y=='1')
@@ -34,7 +34,7 @@ int main()
     } else if (y=='2'){
         cin.get();
     } else {
-        cout << "unvalid choice\n";
+        cout << "invalid choice\n";
         break;
     }
     }
