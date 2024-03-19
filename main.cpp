@@ -20,7 +20,7 @@ int main()
     cout << "IUSTZ ";
     setConsoleColor(1);
     cout << "GAME " << name << "\n\n";
-    setConsoleColor(5);
+    setConsoleColor(15);
     while(true){
     cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
     y =_getch();
