@@ -42,7 +42,7 @@ public:
 class item {
 private:
     // No hp here
-    string Kalashnikov;
+    /*string Kalashnikov;
     string pistol;
     string graneid;
     string m16;
@@ -51,7 +51,10 @@ private:
     string knife;
     string bandaids;
     string adrenaline;
-    string exir_st;
+    string exir_st;*/
+
+    string a[9] = {"Kalashnikov", "pistol", "graneid", "sks", "m14" ,"knife" , "bandaids" , "adrenaline" ," exir_st"};
+
 
 public:
     void set(entity& e, int a) {
