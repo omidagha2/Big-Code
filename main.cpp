@@ -1,15 +1,15 @@
 #include <iostream>
+#include <typeinfo>
 #include "objects.hpp"
 using namespace std;
 
 
 int main(){
 //assume combat
-    Human michael("michael", 12, "male");
-    HumanEnemy boss1("bruh", 9, "female");
-    
-    CombatController combat(michael, boss1);
-    
+    HumanEnemy wrench("mark's first wrench", 12, "male");
+    Entity* equipped = &wrench;
+    cout << typeid(dynamic_cast<HumanEnemy*>(equipped)).name();
+
     //how combat?
     //there should be rewards, consumable & coins.
     //there should be turns

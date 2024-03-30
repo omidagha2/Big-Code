@@ -5,6 +5,7 @@ using namespace std;
 
 class Entity;
 class CombatController;
+class Weapon;
 const int SKILLS_IMPLEMENTED = 2;
 enum class Stage{
     START_MENU,
@@ -71,16 +72,14 @@ public:
     string getname(){return name;};
     void setName(string argName){name = argName;};
 
-    //!needs fixing
-    // string type(){
-    //     if (dynamic_cast<Weapon*>(this) != nullptr) {return "weapon";}
-    //     elif (dynamic_cast<Consumable*>(this) != nullptr){ return "consumable"};
-    //     //...
-    // }
+    virtual string getType(){
+        return "Item";
+    }
 
     int getUseLimit(){return use_limit;}
     int getUsesLeft(){return uses_left;}
     void decrementUsesLeft(int num=1){uses_left-= num;}
+    virtual void UseFunction()=0;
 };
 
 class Weapon: public Item{
@@ -94,6 +93,9 @@ public:
     :Item(argName, INFINITE, INFINITE, argSize), modifier(argMod), dmg(argDMG){};
     
     virtual void attack(Entity*){};
+    virtual string getType(){
+        return "Item";
+    }
 };
 
 class firearm: public Weapon{
@@ -127,6 +129,10 @@ class melee: public Weapon{
 //!haven't used encapsulation for now, write correct access modifier stuff later.
 class Consumable: public Item{
 
+public: 
+    string getType(){
+        return "Consumable";
+    }
 };
 
 class Throwawble: public Consumable{
@@ -162,6 +168,12 @@ public:
     Entity();
     Entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){};
+    virtual string getType(){
+        return "Entity";
+    };
+    virtual bool isAlive(){
+        return hp>0;
+    }
 
 };
 
@@ -178,21 +190,24 @@ public:
         inventory = argInv;
     }
     virtual void attack(Entity*){}
+    virtual string getType(){
+        return "Human";
+    }
     void changeHeldItem(Item* argItem){item_at_hand = argItem;}
     string getname(){return name;}
     vector<Item>* getInv(){return &inventory;}
 
     //!again needs fixing (dynamic cast throwing errors)
-    // void consume(Consumable* item){//currently only for healing
-    //     if (item->getUseLimit() == CONSUMABLE){item->decrementUsesLeft();}
-    //     if (dynamic_cast<Healing*>(item) != nullptr){ //?does this do the cast here? I've assumed it does
-    //         hp+= item->value;
-    //         if (hp > max_hp) hp = max_hp;
-    //     }
-    //     if (item->getUsesLeft() <= 0){
-    //         //remove from inventory (syntax highlighting and suggestions not working can't code without)
-    //     }
-    // }
+    void consume(Consumable* item){//currently only for healing
+        if (item->getUseLimit() == CONSUMABLE){item->decrementUsesLeft();}
+        if (dynamic_cast<Healing*>(item) != nullptr){ //?does this do the cast here? I've assumed it does
+            // hp+= item->value;
+            if (hp > max_hp) hp = max_hp;
+        }
+        if (item->getUsesLeft() <= 0){
+            //remove from inventory (syntax highlighting and suggestions not working can't code without)
+        }
+    }
     
 };
 
@@ -201,49 +216,50 @@ class Player: public Human{
 public:
     Player(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
+    virtual string getType(){
+        return "Player";
+    }
 };
 
-class EnemySimple: public Entity{
+//methods that mutate enemy object data
+class EnemyController{
+    virtual void takedamage();
+    virtual void changeState();
+    virtual void dealdamage(Player*);
+};
+
+class SimpleController: public EnemyController{
+    Enemy* enemy;
+
+};
+
+class Enemy: public Entity{
 protected:
     EnemyStatesSimple current_State;
     // vector<EnemyStatesSimple> available_States;
 public:
-    void attack(Human*);
+    virtual void attack(Player*){};
+    virtual string getType(){
+        return "Enemy";
+    }
+
 };
 
 class HumanEnemy: public Human{
     string dialogue;
-    Player* target;
+    Player* target; 
 
 public: 
     HumanEnemy(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
-    :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
+    :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){
 
-
-//they add the thing they can get the most possible use out of 
-//a use percent calculator
-//private multipliers
-
-//State fine: the enemy wants to 1 do the most damage, 2 be left on a good amount of hp, 3 
-
-//maybe no need to have an evaluate funciton if you have the use% funciton
-//*final plan: have the use% function, add the things you can use more than 90% of to some list, then randomly use 2 of thsoe things.
-//Items can have tiers. the AI doesn't add low tier Items to the list
-//this will be for the fine State
-//maybe they can just differentiate levels, if the player is too strong they try to run
-//if they see they can't defeat the player they build up stamina to run
-//maybe a skill calculator, if you use something like undertale's attack, the enemy might see h=how good you are at dealing the most of your damage. 
-
-//when will enemy use buffs? 
-    //when he can use the highest damage weapon he has/deal the most damage. also won't use it if he can already deal that damage and the buff has no effect on damage.
-    //unless it's a critical State. according to lore, he'd like to live more than defeat you as an enemy, except maybe the final boss.
-    //maybe different bosses have different priorities.
+    };
     
-    //currently finish the fine State. States only change modifiers for now
+    virtual string getType(){
+        return "HumanEnemy";
+    }
+    
 
-    // int evaluate(){ //this would mean you have to create new objects to evaluate every time. 
-    //     return hp + sta;
-    // };
 
     int useEfficiency(){
         //if items had a max usage variable things would be very easy here. however, it would be harder when we get to making the factory and level generators.
@@ -260,7 +276,7 @@ public:
 
 // };
 
-class zombie: public EnemySimple{
+class zombie: public Enemy{
     
 };
 
@@ -291,25 +307,27 @@ class Game{
 class CombatController{
     //
     //has a return result function. currently a stub is enough. maybe put it in the destructor?
-    Entity the_friend;
-    Entity the_foe;
+    Entity* friendPTR;
+    Entity* foePTR;
     
 public:
-    CombatController(Entity& argFriend, Entity& argFoe)
-    :the_foe(argFoe), the_friend(argFriend){
-        while (argFriend.hp > 0 && argFoe.hp > 0){
-            cout << argFriend.hp << ' ' << argFoe.hp << endl;
-            return;
-            //update display
-            //prompt user
-            //do player actions
-            //do enemy actions
-            //TODO the main point of a controller is to restrict user access to through a controllable structure. No need to hold all the logic here, specifically it's ok to have entity classes modify their items.   
-            //:enemies have (restricted, not friend) access to their items, and some info functions like eval and use efficiency. combat related stuff, like states and etc are gonna be in combat controller.
-        };
-    };
-    Entity& getFriend(){return the_friend;};
-    Entity& getFoe(){return the_foe;};
+    
+    static CombatController& GetInstance(){
+        static CombatController combatInstance;
+        return combatInstance;
+    }
+
+    static Entity* getFriendPTR() {return CombatController::GetInstance().imp_getFriendPTR();}
+    static Entity* getFoePTR() {return CombatController::GetInstance().imp_getFoePT();}
+private:
+    Entity* imp_getFriendPTR(){return friendPTR;}
+    Entity* imp_getFoePT(){return foePTR;}
+
+    void Imp_GameLoop(){
+        while (friendPTR->isAlive() && foePTR-> isAlive()){
+
+        }
+    }
     // void action(Entity* towho, pair <action, value>);
     
 };
@@ -318,6 +336,8 @@ public:
 
 // }
 
-class Display{};
+class Display{
+    
+};
 class SombatDisplay: public Display{};
 class ShopDisplay: public Display{};
