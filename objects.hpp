@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "items.hpp"
 using namespace std;
 
 class Entity;
@@ -80,6 +81,8 @@ public:
     int getUsesLeft(){return uses_left;}
     void decrementUsesLeft(int num=1){uses_left-= num;}
     virtual void UseFunction()=0;
+    
+
 };
 
 class Weapon: public Item{
@@ -94,7 +97,7 @@ public:
     
     virtual void attack(Entity*){};
     virtual string getType(){
-        return "Item";
+        return "Weapon";
     }
 };
 
@@ -135,21 +138,25 @@ public:
     }
 };
 
-class Throwawble: public Consumable{
+class Throwable: public Consumable{
     DamageType dmgtype;
     int damage;
 };
 
-class Healing: public Consumable{
-    int value;
-};
-
-class StaminaRecovery: public Consumable{
-    int value;
+class Restorative: public Consumable{
+    int hp_value;
+    int sta_value;
+public:
+    string getType(){
+        return "Rs";
+    }
 };
 
 
 class Entity{
+    enum class Type{
+        //stuff to replace the strings with
+    };
     friend CombatController;
 protected:
     string name;
@@ -174,6 +181,10 @@ public:
     virtual bool isAlive(){
         return hp>0;
     }
+    int getHp(){return hp;}
+    int getSta(){return sta;}
+    int getHpMax(){return max_hp;}
+    int getStaMax(){return max_sta;}
 
 };
 
@@ -189,39 +200,28 @@ public:
         item_at_hand = argItemAtHandPTR;
         inventory = argInv;
     }
-    virtual void attack(Entity*){}
     virtual string getType(){
         return "Human";
     }
-    void changeHeldItem(Item* argItem){item_at_hand = argItem;}
     string getname(){return name;}
     vector<Item>* getInv(){return &inventory;}
-
-    //!again needs fixing (dynamic cast throwing errors)
-    void consume(Consumable* item){//currently only for healing
-        if (item->getUseLimit() == CONSUMABLE){item->decrementUsesLeft();}
-        if (dynamic_cast<Healing*>(item) != nullptr){ //?does this do the cast here? I've assumed it does
-            // hp+= item->value;
-            if (hp > max_hp) hp = max_hp;
-        }
-        if (item->getUsesLeft() <= 0){
-            //remove from inventory (syntax highlighting and suggestions not working can't code without)
-        }
-    }
-    
 };
 
 class Player: public Human{
-
 public:
     Player(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
+
     virtual string getType(){
         return "Player";
     }
+
+
 };
 
-//methods that mutate enemy object data
+
+//methods that mutate object data should all be here.
+//
 class EnemyController{
     virtual void takedamage();
     virtual void changeState();
@@ -230,9 +230,10 @@ class EnemyController{
 
 class SimpleController: public EnemyController{
     Enemy* enemy;
-
+    
 };
 
+//a placeholder implementation, to be replaced with mvc. 
 class Enemy: public Entity{
 protected:
     EnemyStatesSimple current_State;
@@ -244,6 +245,7 @@ public:
     }
 
 };
+
 
 class HumanEnemy: public Human{
     string dialogue;
