@@ -30,15 +30,6 @@ enum class MOD{
     //...
 };
 
-enum class EnemyStatesSimple: int{//states can be integer coded (represented by integers, like state 0, 1, 12, ...) so we want the integer operators, but also would be good to have them scoped. is this the right way to do this? again, syntax highlighting isn't working ت
-    Entry,
-    LowHP,
-    LowSTA,
-    Fine,
-
-
-};
-
 // enum ACTION{ //if implementing a command system for combat controller
 //     HEAL, 
 //     DAMAGE,
@@ -186,6 +177,12 @@ public:
     int getHpMax(){return max_hp;}
     int getStaMax(){return max_sta;}
 
+    int hpFullPercent(){
+        if (max_hp < 1) 
+            return NULL;
+        return hp*100/max_hp;
+    }
+
 };
 
 class Human: public Entity{
@@ -236,7 +233,7 @@ class SimpleController: public EnemyController{
 //a placeholder implementation, to be replaced with mvc. 
 class Enemy: public Entity{
 protected:
-    EnemyStatesSimple current_State;
+    // EnemyStatesSimple current_State;
     // vector<EnemyStatesSimple> available_States;
 public:
     virtual void attack(Player*){};
@@ -260,14 +257,11 @@ public:
     virtual string getType(){
         return "HumanEnemy";
     }
-    
-
 
     int useEfficiency(){
         //if items had a max usage variable things would be very easy here. however, it would be harder when we get to making the factory and level generators.
     };
 
-    void use(Item thing){};
 };
 
 // class HenchMan: public HumanEnemy{
