@@ -83,6 +83,7 @@ public:
     int getLvl() const {return lvl;}
     int getDmg() const {return dmg;}
     int getSta() const {return sta;}
+    int getHp() const {return hp;}
     void setHp(int newhp)
     {
         hp=newhp;
@@ -104,7 +105,7 @@ public:
     human(){}
     virtual void attack(entity* x){}
     void changeHeldItem();
-    int getHp() const {return hp;}
+    
 };
 
 class characters: public human{
@@ -124,7 +125,7 @@ public:
         chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
         chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
     }
-    human& choice()
+    entity& choice()
     {
         human choice;
         int a=0;
@@ -148,11 +149,11 @@ public:
         }
         
     }
-    void takeDamage(int damage) {
-        human& x = choice();
-        int newhp= x.getHp() -damage;
+    void attack (entity* a) {
+        entity& x = choice();
+        int newhp= x.getHp() -a->getDmg();
         x.setHp(newhp);
-        cout << x.getName() << " takes " << damage << " damage.\n";
+        cout << x.getName() << " takes " << a->getDmg() << " damage.\n";
         if (x.getHp() <= 0) {
             cout << x.getName() << " has been defeated!\n";
         } 
@@ -179,6 +180,7 @@ public:
         enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 15, 10);
         enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
     }
+   
 };
 
 void setConsoleColor(int color){
