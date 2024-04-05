@@ -79,10 +79,15 @@ public:
     entity()=default;
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){}
-    string getname() const {return name;}
-    int getlvl() {return lvl;}
-    int getdmg() {return dmg;}
-    int getsta() {return sta;}
+    string getName() const {return name;}
+    int getLvl() const {return lvl;}
+    int getDmg() const {return dmg;}
+    int getSta() const {return sta;}
+    int setHp(int newhp)
+    {
+        hp=newhp;
+    }
+    
 };
 
 class human: public entity{
@@ -99,14 +104,14 @@ public:
     human(){}
     virtual void attack(entity* x){}
     void changeHeldItem();
-   
+    int getHp() const {return hp;}
 };
 
 class characters: public human{
     vector<human> chars;
 public:
    
-      characters() {
+    characters() {
         // Directly initialize the characters in the constructor
         chars.emplace_back("Thalion", 20, "Male", 1, 100, 10, 10);
         chars.emplace_back("Eirwyn", 25, "Male", 1, 110, 20, 20);
@@ -119,16 +124,40 @@ public:
         chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
         chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
     }
+    human& choice()
+    {
+        human choice;
+        int a;
+        cout << "\nChoose a character\n";
+        displaychars();
+        cin >> a;
+        int a;
+        if (a >= 1 && a <= 10) {
+            choice = chars[a-1];
+        } else {
+            std::cout << "Choose between 1-10 please...\n";
+        }
+        return choice;
+    }
     
     void displaychars(){
         cout << "you can choose..\n";
         for (int i = 0; i < chars.size(); i++)
         {
-            cout << (i+1) << ". " << "Name: " << chars[i].getname() << endl << "Level: " << chars[i].getlvl() << endl;
-            cout << "Damage: " << chars[i].getdmg() << endl << "Stamina: " << chars[i].getsta() << endl;
+            cout << (i+1) << ". " << "Name: " << chars[i].getName() << endl << "Level: " << chars[i].getLvl() << endl;
+            cout << "Damage: " << chars[i].getDmg() << endl << "Stamina: " << chars[i].getSta() << endl;
         }
         
     }
+    void takeDamage(int damage) {
+        human& x = choice();
+        int newhp= x.getHp() -damage;
+        x.setHp(newhp);
+        cout << x.getName() << " takes " << damage << " damage.\n";
+        if (x.getHp() <= 0) {
+            cout << x.getName() << " has been defeated!\n";
+        } 
+}
     bool isDefeated() const {
 
         return hp <= 0;
@@ -150,15 +179,7 @@ public:
         enemy.emplace_back("Salamarauder", 20, "Female", 1, 150, 10, 15);
         enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 15, 10);
         enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
-
     }
-};
-class HenchMan: public HumanEnemy{
-
-};
-
-class HumanBoss: public HumanEnemy{
-
 };
 
 void setConsoleColor(int color){
