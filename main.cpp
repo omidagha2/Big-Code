@@ -1,14 +1,15 @@
 #include <iostream>
 #include <typeinfo>
 #include "objects.hpp"
+#include "combat.hpp"
 using namespace std;
 
 
 int main(){
 //assume combat
-    HumanEnemy wrench("mark's first wrench", 12, "male");
-    Entity* equipped = &wrench;
-    cout << typeid(dynamic_cast<HumanEnemy*>(equipped)).name();
+    // HumanEnemy wrench("mark's first wrench", 12, "male");
+    // Entity* equipped = &wrench;
+    // cout << typeid(dynamic_cast<HumanEnemy*>(equipped)).name();
 
     //how combat?
     //there should be rewards, consumable & coins.

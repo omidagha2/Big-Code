@@ -30,28 +30,8 @@ enum class MOD{
     //...
 };
 
-// enum ACTION{ //if implementing a command system for combat controller
-//     HEAL, 
-//     DAMAGE,
-//     STAMINA,
-// };
-
-// // //todo: use templates to make more reusable
-// // class dict{
-// //     vector<string> keys;
-// //     vector<double> values;
-
-// // public:
-// //     dict(vector<string> argKeys, vector<double> argVals){
-// //         keys = argKeys;
-// //         values = argVals;
-// //     };
-// // };
-//healing, 
-//don't worry about stamina
-//stamina is only used for running vs. attacking. maybe they can choose between attacking and building up stamina to run
-
 class Item{
+    friend class HumanEnemy;
 protected:
     string name;
     int use_limit;
@@ -71,7 +51,7 @@ public:
     int getUseLimit(){return use_limit;}
     int getUsesLeft(){return uses_left;}
     void decrementUsesLeft(int num=1){uses_left-= num;}
-    virtual void UseFunction()=0;
+    virtual void UseFunction(){};
     
 
 };
@@ -119,14 +99,33 @@ class melee: public Weapon{
 // class club: public melee{
 
 // };
+class ValuedComponent{
+    protected:
+    int max_value;
+    int value ;
+public:
+    virtual int usePercent(){return value*100/max_value;};
+    virtual int getValue(){return value;}
+};
 
-//!haven't used encapsulation for now, write correct access modifier stuff later.
+struct Stat{
+    class HealthComponent: public ValuedComponent{
+        friend HumanEnemy;
+        friend class EnemyModel1;
+    };
+    class StaminaComponent: public ValuedComponent{
+        friend HumanEnemy;
+        friend class EnemyModel1;
+    };
+};
 class Consumable: public Item{
-
+    vector<ValuedComponent> valueComponents;
 public: 
     string getType(){
         return "Consumable";
     }
+
+    vector<ValuedComponent>* getValueComponents(){return &valueComponents;}
 };
 
 class Throwable: public Consumable{
@@ -143,8 +142,8 @@ public:
     }
 };
 
-
 class Entity{
+    friend class EnemyModel1;
     enum class Type{
         //stuff to replace the strings with
     };
@@ -176,6 +175,8 @@ public:
     int getSta(){return sta;}
     int getHpMax(){return max_hp;}
     int getStaMax(){return max_sta;}
+    int getLVL(){return lvl;}
+    int getDMG(){return dmg;}
 
     int hpFullPercent(){
         if (max_hp < 1) 
@@ -183,6 +184,11 @@ public:
         return hp*100/max_hp;
     }
 
+    int staminaFullPercent(){
+        if (max_sta < 1)
+            return NULL;
+        return sta*100/max_sta;
+    }
 };
 
 class Human: public Entity{
@@ -202,9 +208,14 @@ public:
     }
     string getname(){return name;}
     vector<Item>* getInv(){return &inventory;}
+    
+    virtual void takedamage(int damage){//make damage a component based class
+        hp -= damage;
+    }
 };
 
 class Player: public Human{
+    // Character* character;
 public:
     Player(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
@@ -219,17 +230,6 @@ public:
 
 //methods that mutate object data should all be here.
 //
-class EnemyController{
-    virtual void takedamage();
-    virtual void changeState();
-    virtual void dealdamage(Player*);
-};
-
-class SimpleController: public EnemyController{
-    Enemy* enemy;
-    
-};
-
 //a placeholder implementation, to be replaced with mvc. 
 class Enemy: public Entity{
 protected:
@@ -243,16 +243,16 @@ public:
 
 };
 
-
 class HumanEnemy: public Human{
     string dialogue;
     Player* target; 
+    friend class EnemyModel1;
 
 public: 
     HumanEnemy(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){
 
-    };
+    }
     
     virtual string getType(){
         return "HumanEnemy";
@@ -260,8 +260,26 @@ public:
 
     int useEfficiency(){
         //if items had a max usage variable things would be very easy here. however, it would be harder when we get to making the factory and level generators.
-    };
+    }
 
+    void updateInventory(){
+        Item* i = &*inventory.begin();
+        while (i != &*inventory.end()){
+            if (i->getType() == "Consumable"){
+                Consumable* conptr = dynamic_cast<Consumable*>(i);
+                for (ValuedComponent vc: *conptr->getValueComponents()){
+                    ValuedComponent* vcptr = &vc;
+                    if (Stat::HealthComponent* componentPTR = dynamic_cast<Stat::HealthComponent*>(vcptr)){
+                        componentPTR->value = min(this->max_hp - this->hp, componentPTR->max_value);
+                    }
+                    if (Stat::StaminaComponent* componentPTR = dynamic_cast<Stat::StaminaComponent*>(vcptr)){
+                        componentPTR->value = min(this->max_sta - this->sta, componentPTR->max_value);
+                    }
+                };
+            }
+        }
+    }
+    
 };
 
 // class HenchMan: public HumanEnemy{
@@ -284,56 +302,10 @@ class Juggernaut: public zombie{
 
 };
 
-class Menu{
-    vector<string> choices;
-    
-public:
-    void choice1(){};
-    void choice2(){};
-    void choice3(){};
-    //...
-};
-
 class Game{
     Stage stage;
-    Menu startmenu;
 };
 
 
-class CombatController{
-    //
-    //has a return result function. currently a stub is enough. maybe put it in the destructor?
-    Entity* friendPTR;
-    Entity* foePTR;
-    
-public:
-    
-    static CombatController& GetInstance(){
-        static CombatController combatInstance;
-        return combatInstance;
-    }
 
-    static Entity* getFriendPTR() {return CombatController::GetInstance().imp_getFriendPTR();}
-    static Entity* getFoePTR() {return CombatController::GetInstance().imp_getFoePT();}
-private:
-    Entity* imp_getFriendPTR(){return friendPTR;}
-    Entity* imp_getFoePT(){return foePTR;}
 
-    void Imp_GameLoop(){
-        while (friendPTR->isAlive() && foePTR-> isAlive()){
-
-        }
-    }
-    // void action(Entity* towho, pair <action, value>);
-    
-};
-
-// HumanEnemy Human_enemy_generator(int lvl){
-
-// }
-
-class Display{
-    
-};
-class SombatDisplay: public Display{};
-class ShopDisplay: public Display{};

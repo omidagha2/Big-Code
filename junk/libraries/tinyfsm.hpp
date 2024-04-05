@@ -83,7 +83,7 @@ namespace tinyfsm
 
   template<typename F>
   class Fsm
-  {
+  
   public:
 
     using fsmtype = Fsm<F>;
