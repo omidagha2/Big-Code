@@ -83,7 +83,7 @@ public:
     int getLvl() const {return lvl;}
     int getDmg() const {return dmg;}
     int getSta() const {return sta;}
-    int setHp(int newhp)
+    void setHp(int newhp)
     {
         hp=newhp;
     }
@@ -127,11 +127,10 @@ public:
     human& choice()
     {
         human choice;
-        int a;
+        int a=0;
         cout << "\nChoose a character\n";
         displaychars();
         cin >> a;
-        int a;
         if (a >= 1 && a <= 10) {
             choice = chars[a-1];
         } else {
