@@ -31,23 +31,17 @@ enum STATE{
 
 class item{
 private:
-    string Kalashnikov;
-    string pistol;
-    string graneid;
-    string m16;
-    string sks;
-    string m14;
-    string knife;
-    string bandaids;
-    string adrenaline;
-    string exir_st;
+   
 protected:
+    string name;
     int use_limit;
     int uses_left;
     int size;
+    string weapons[9] = {"Kalashnikov", "pistol", "graneid", "sks", "m14" ,"knife" , "bandaids" , "adrenaline" ," exir_st"};
 
 public:
     item(int argU_Limit, int argU_Left, int argSize){}
+    string nameofIt(){ cin >> name; return name;}
     item(){}
 };
 
@@ -57,9 +51,10 @@ protected:
     int dmg;
 public:
     weapon(MOD argMod, int argDMG, int argSize)
-    :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG){}
-    
-     
+    :item(infinite, infinite, argSize), modifier(argMod), dmg(argDMG) {
+
+    }
+
 };
 
 
@@ -72,6 +67,7 @@ protected:
     int hp;
     int dmg;
     int sta;
+    int coin;
 
 public:
     virtual void attack(entity* x)=0;
@@ -94,7 +90,7 @@ public:
 class human: public entity{
 protected:
     item item_at_hand;
-    vector<item> inventory;
+    vector<vector<string>> inventory={{"weopons"},{"healer Items"},{"throwable Items"}};
     int skills[SKILLS_IMPLEMENTED];
 
 public: 
@@ -104,7 +100,23 @@ public:
     }
     human(){}
     virtual void attack(entity* x){}
-    void changeHeldItem();
+    item changeHeldItem(string pack) {
+        for (int i = 0; i < 3; i++)
+        {
+            if (inventory[i][0]==pack)
+            {
+                for (int j = 0; j < inventory[i].size(); j++)
+                {
+                    cout << inventory[i][j] << ",,";
+
+                }
+                item_at_hand.nameofIt();
+            }
+            
+        }
+        
+        return item_at_hand;
+    }
     
 };
 
@@ -125,20 +137,34 @@ public:
         chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
         chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
     }
-    entity& choice()
+    // entity& choice()
+    // {
+    //     human choice;
+    //     int a=0;
+    //     cout << "\nChoose a character\n";
+    //     displaychars();
+    //     cin >> a;
+    //     if (a >= 1 && a <= 10) {
+    //         choice = chars[a-1];
+    //     } else {
+    //         std::cout << "Choose between 1-10 please...\n";
+    //     }
+    //     return choice;
+    // }
+    human* choice()
     {
-        human choice;
-        int a=0;
+        int a = 0;
         cout << "\nChoose a character\n";
         displaychars();
         cin >> a;
-        if (a >= 1 && a <= 10) {
-            choice = chars[a-1];
+        if (a >= 1 && a < 10) {
+            return &chars[a-1];
         } else {
-            std::cout << "Choose between 1-10 please...\n";
+            cout << "Choose between 1-10" << " please...\n";
+            return nullptr; // Return a null pointer if the input is invalid
         }
-        return choice;
     }
+
     
     void displaychars(){
         cout << "you can choose..\n";
@@ -149,15 +175,27 @@ public:
         }
         
     }
-    void attack (entity* a) {
-        entity& x = choice();
-        int newhp= x.getHp() -a->getDmg();
-        x.setHp(newhp);
-        cout << x.getName() << " takes " << a->getDmg() << " damage.\n";
-        if (x.getHp() <= 0) {
-            cout << x.getName() << " has been defeated!\n";
-        } 
-}
+//     void attack (entity* a) {
+//         entity& x = choice();
+//         int newhp= x.getHp() -a->getDmg();
+//         x.setHp(newhp);
+//         cout << x.getName() << " takes " << a->getDmg() << " damage.\n";
+//         if (x.getHp() <= 0) {
+//             cout << x.getName() << " has been defeated!\n";
+//         } 
+// }
+    void attack(entity* a) {
+        human* x = choice();
+        if (x != nullptr) { // Check if the choice is valid
+            int newhp = x->getHp() - a->getDmg();
+            x->setHp(newhp);
+            cout << x->getName() << " takes " << a->getDmg() << " damage.\n";
+            if (x->getHp() <= 0) {
+                cout << x->getName() << " has been defeated!\n";
+            }
+        }
+    }
+
     bool isDefeated() const {
 
         return hp <= 0;
@@ -179,6 +217,11 @@ public:
         enemy.emplace_back("Salamarauder", 20, "Female", 1, 150, 10, 15);
         enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 15, 10);
         enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
+        enemy.emplace_back();
+        enemy.emplace_back();
+        enemy.emplace_back();
+        enemy.emplace_back();
+
     }
    
 };
@@ -188,3 +231,30 @@ void setConsoleColor(int color){
     cout.flush();
     SetConsoleTextAttribute(hConsole, color);
 }
+
+class Singleton {
+public:
+    static Singleton& get() {
+        if (nullptr == instance)
+            instance = new Singleton;
+        return *instance;
+    }
+
+    // Existing interface methods go here
+    int getValue() { return value; }
+    void setValue(int value_) { value = value_; }
+
+    // Destructor to clean up
+    static void destruct() {
+        delete instance;
+        instance = nullptr;
+    }
+
+private:
+    Singleton() = default; // No public constructor
+    ~Singleton() = default; // No public destructor
+
+    static Singleton* instance; // Declaration of the class variable
+    int value;
+};
+Singleton* Singleton::instance = nullptr; // Definition of the class variable
