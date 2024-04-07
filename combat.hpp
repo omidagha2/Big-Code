@@ -109,7 +109,6 @@ namespace combat1
                     break;
                 case State::Dangerously_Low_HP:
                     DLHP();
-                    current_state = State::Entry;
                     //sorts healing items based on how close using them brings them closest to 90 percent of max health.
                 case State::Low_HP:
                 case State::HpFine:
@@ -130,6 +129,7 @@ namespace combat1
         void DLHP(){
             vector<Item> inv = *(self->getInv());
             sort(inv.begin(), inv.end(), SortByV);
+            current_state = State::Entry;
         }
 
         bool SortByV(ValuedComponent i1, ValuedComponent i2){
@@ -139,11 +139,12 @@ namespace combat1
         bool SortByUP(ValuedComponent i1, ValuedComponent i2){
             return i1.usePercent() > i2.usePercent();
         }
-        
+
         //!stub implementations.
         void attack(Player* player){
-            player->takedamage(self->getDMG());
+            player->takeDamage(self->getDMG());
         }
+        
         int calculateDamage(Player* player, Weapon* weapon){
             return self->getDMG();
             //copy an entity with the relevant parameters and deal damage to them and see how much it does.
@@ -186,9 +187,6 @@ namespace combat1
             }
             // void action(Entity* towho, pair <action, value>);
         };
-
-
-
 }
 
 // enemy combat fsm 2:

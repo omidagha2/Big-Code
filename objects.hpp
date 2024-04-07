@@ -4,32 +4,13 @@
 #include "items.hpp"
 using namespace std;
 
+class DamageComponent;
 class Entity;
 class CombatController;
 class Weapon;
-const int SKILLS_IMPLEMENTED = 2;
-enum class Stage{
-    START_MENU,
-    LVL1,
-    LVL2,
-    LVL3
-};
-
-enum UseType{
-    CONSUMABLE,
-    INFINITE
-};
-
-enum class DamageType{
-    SLICE, IMPACT,
-};
-
-
-enum class MOD{
-    COMMON,
-    //...
-};
-
+class HumanEnemy;
+class Human;
+class Player;
 class Item{
     friend class HumanEnemy;
 protected:
@@ -51,16 +32,18 @@ public:
     int getUseLimit(){return use_limit;}
     int getUsesLeft(){return uses_left;}
     void decrementUsesLeft(int num=1){uses_left-= num;}
-    virtual void UseFunction(){};
-    
-
 };
 
 class Weapon: public Item{
+
 protected:
-    DamageType damage_type;
-    MOD modifier;
+    enum UseType{
+    CONSUMABLE,
+    INFINITE
+    };
+    enum MOD{};
     int dmg;
+    MOD modifier;
 
 public:
     Weapon(string argName, MOD argMod, int argDMG, int argSize)
@@ -73,77 +56,100 @@ public:
 };
 
 class firearm: public Weapon{
-
+    //takes pointer to a character's ammo box
 };
 
 class melee: public Weapon{
 
 };
 
-// class pistol: public firearm{
-
-// };
-
-// class rifle: public firearm{
-
-// };
-
-// class grenade_launcher: public firearm{
-
-// };
-
-// class knife: public melee{
-
-// };
-
-// class club: public melee{
-
-// };
 class ValuedComponent{
-    protected:
+protected:
     int max_value;
-    int value ;
+    int value;
 public:
     virtual int usePercent(){return value*100/max_value;};
     virtual int getValue(){return value;}
+    virtual string getType(){return "ValuedComponent";}
+
+    virtual void setVal(int val){
+        value = val;
+    }
+    virtual int getVal(){return value;}
+    virtual int getMaxVal(){return max_value;}
+    
 };
+
+
 
 struct Stat{
     class HealthComponent: public ValuedComponent{
         friend HumanEnemy;
         friend class EnemyModel1;
+    public:
+        virtual string getType(){return "HealthComponent";}
+        HealthComponent(int v, int mv=-1){
+            if (mv==-1)
+                max_value = v;
+            else
+                max_value = mv;
+            value = v;
+        }
     };
     class StaminaComponent: public ValuedComponent{
         friend HumanEnemy;
         friend class EnemyModel1;
+    public:
+        virtual string getType(){return "StaminaComponent";}
+        StaminaComponent(int v, int mv=-1){
+            if (mv==-1)
+                max_value = v;
+            else
+                max_value = mv;
+            value = v;
+        }
     };
 };
+
+struct Damage_Type{
+    
+};
+
 class Consumable: public Item{
     vector<ValuedComponent> valueComponents;
 public: 
+
+    Consumable(string name, int use_limit, int uses_left, vector<ValuedComponent> VCs={}, int size=1): Item(name, use_limit, uses_left, size){
+        valueComponents = VCs;
+    };
+
+    void addVC(ValuedComponent vc){
+        valueComponents.push_back(vc);
+    }
+
     string getType(){
         return "Consumable";
     }
-
+    
     vector<ValuedComponent>* getValueComponents(){return &valueComponents;}
+    void apply(Entity* entity){
+        for (ValuedComponent v: valueComponents){
+            entity->consumeComponent(v);
+            //do something with v if v is an object of some sort. maybe remove it, etc.
+        }
+    }
 };
 
-class Throwable: public Consumable{
-    DamageType dmgtype;
+class Throwable: public Item{
     int damage;
-};
-
-class Restorative: public Consumable{
-    int hp_value;
-    int sta_value;
 public:
     string getType(){
-        return "Rs";
+        return "Throwable";
     }
 };
 
 class Entity{
-    friend class EnemyModel1;
+    friend DamageComponent;
     enum class Type{
         //stuff to replace the strings with
     };
@@ -162,7 +168,7 @@ protected:
 public:
     // virtual void attack(Entity*)=0;
 
-    Entity();
+    Entity(){};
     Entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){};
     virtual string getType(){
@@ -178,24 +184,49 @@ public:
     int getLVL(){return lvl;}
     int getDMG(){return dmg;}
 
+    int heal(int amount){//a multiplier of some sort
+        hp = min(max_hp, hp+amount);
+    }
+
+    int increaseStamina(int amount){
+        sta = min(max_sta, sta + amount);
+    }
+
+    virtual int calculateDmg(int damage){return damage;}
+    
+    virtual void takeDamage(int damage){//make damage a component based class
+        hp -= calculateDmg(damage);
+    }
+
     int hpFullPercent(){
         if (max_hp < 1) 
-            return NULL;
+            return -1;
         return hp*100/max_hp;
     }
 
     int staminaFullPercent(){
         if (max_sta < 1)
-            return NULL;
+            return -1;
         return sta*100/max_sta;
     }
+
+    virtual void consumeComponent(ValuedComponent vc){
+        string type = vc.getType();
+        if (type == "HealthComponent"){
+            this->heal(vc.getValue());
+        }
+        else if (type == "StaminaComponent"){
+            this->increaseStamina(vc.getValue());
+        }
+    }
+
+
 };
 
 class Human: public Entity{
 protected:
     Item* item_at_hand;
     vector<Item> inventory;
-    int skills[SKILLS_IMPLEMENTED];
 
 public: 
     Human(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
@@ -208,14 +239,10 @@ public:
     }
     string getname(){return name;}
     vector<Item>* getInv(){return &inventory;}
-    
-    virtual void takedamage(int damage){//make damage a component based class
-        hp -= damage;
-    }
 };
 
 class Player: public Human{
-    // Character* character;
+    friend DamageComponent;
 public:
     Player(string argName, int argAge, string argGender, vector<Item> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100)
     :Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argHP){};
@@ -223,8 +250,6 @@ public:
     virtual string getType(){
         return "Player";
     }
-
-
 };
 
 
@@ -270,10 +295,10 @@ public:
                 for (ValuedComponent vc: *conptr->getValueComponents()){
                     ValuedComponent* vcptr = &vc;
                     if (Stat::HealthComponent* componentPTR = dynamic_cast<Stat::HealthComponent*>(vcptr)){
-                        componentPTR->value = min(this->max_hp - this->hp, componentPTR->max_value);
+                        componentPTR->setVal(min(this->max_hp - this->hp, componentPTR->getMaxVal()));
                     }
                     if (Stat::StaminaComponent* componentPTR = dynamic_cast<Stat::StaminaComponent*>(vcptr)){
-                        componentPTR->value = min(this->max_sta - this->sta, componentPTR->max_value);
+                        componentPTR->setVal(min(this->max_sta - this->sta, componentPTR->getMaxVal()));
                     }
                 };
             }
@@ -282,30 +307,17 @@ public:
     
 };
 
-// class HenchMan: public HumanEnemy{
- 
-// };
 
-// class HumanBoss: public HumanEnemy{
 
-// };
 
-class zombie: public Enemy{
-    
+class DamageComponent{
+    int damage;
+protected:
+public:
+    virtual int simulateDamage(Entity* entity){
+        return entity->calculateDmg(damage);
+    }
+    virtual int deal(Entity* entity){
+
+    }
 };
-
-class CommonHusk: public zombie{
-
-};
-
-class Juggernaut: public zombie{
-
-};
-
-class Game{
-    Stage stage;
-};
-
-
-
-
