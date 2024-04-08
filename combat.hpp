@@ -129,6 +129,7 @@ namespace combat1
         void DLHP(){
             vector<Item> inv = *(self->getInv());
             sort(inv.begin(), inv.end(), SortByV);
+            //
             current_state = State::Entry;
         }
 

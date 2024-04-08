@@ -1,6 +1,6 @@
 #include <iostream>
 #include <typeinfo>
-#include "objects.hpp"
+#include "objects2.hpp"
 using namespace std;
 
 
@@ -15,9 +15,5 @@ int main(){
     //there should be turns
     //after each turn, update inventories, update hp, pass turn. (currently for one player vs. one enemy only) 
     //not in combat function, maybe take care of get_damaged and/or other stuff like that inside the player & other guy functions
-    Consumable rs_potion1("mom's porridge", 1, 1, {Stat::HealthComponent(1, 2), Stat::StaminaComponent(1, 2)});
-    HumanEnemy mcihael("michael", 12, "male");
-    cout << mcihael.getHp();
     //item id's?
 }
-
