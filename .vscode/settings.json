@@ -13,11 +13,17 @@
     },
     "editor.semanticHighlighting.enabled": true,
     "files.associations": {
+        "*.erd": "json",
+        "*.vuerd": "json",
         "xstring": "cpp",
         "format": "cpp",
         "fstream": "cpp",
         "system_error": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "xutility": "cpp",
+        "xhash": "cpp",
+        "charconv": "cpp",
+        "xmemory": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#224444",

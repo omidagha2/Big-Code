@@ -1,2 +1,3 @@
-#include "objects2.hpp"
-using namespace std;
+for (Item* i: bro.getInv()){
+        cout << i->getname();
+    }
