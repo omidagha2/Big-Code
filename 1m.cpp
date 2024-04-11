@@ -3,6 +3,7 @@
 #include <iostream>
 #include <windows.h>
 #include <conio.h>
+#include <fstream>
 
 using namespace std;
 
@@ -99,7 +100,9 @@ public:
         
     }
     human(){}
-    virtual void attack(entity* x){}
+    virtual void attack(entity* x) {
+
+    }
     item changeHeldItem(string pack) {
         for (int i = 0; i < 3; i++)
         {
@@ -137,27 +140,13 @@ public:
         chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
         chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
     }
-    // entity& choice()
-    // {
-    //     human choice;
-    //     int a=0;
-    //     cout << "\nChoose a character\n";
-    //     displaychars();
-    //     cin >> a;
-    //     if (a >= 1 && a <= 10) {
-    //         choice = chars[a-1];
-    //     } else {
-    //         std::cout << "Choose between 1-10 please...\n";
-    //     }
-    //     return choice;
-    // }
     human* choice()
     {
         int a = 0;
         cout << "\nChoose a character\n";
         displaychars();
         cin >> a;
-        if (a >= 1 && a < 10) {
+        if (a >= 1 && a <= chars.size()) {
             return &chars[a-1];
         } else {
             cout << "Choose between 1-10" << " please...\n";
@@ -175,15 +164,7 @@ public:
         }
         
     }
-//     void attack (entity* a) {
-//         entity& x = choice();
-//         int newhp= x.getHp() -a->getDmg();
-//         x.setHp(newhp);
-//         cout << x.getName() << " takes " << a->getDmg() << " damage.\n";
-//         if (x.getHp() <= 0) {
-//             cout << x.getName() << " has been defeated!\n";
-//         } 
-// }
+
     void attack(entity* a) {
         human* x = choice();
         if (x != nullptr) { // Check if the choice is valid
@@ -258,3 +239,78 @@ private:
     int value;
 };
 Singleton* Singleton::instance = nullptr; // Definition of the class variable
+
+
+class StoryHandler {
+private:
+    int chapter;
+public:
+    StoryHandler() : chapter(1) {}
+
+    void displayStory() {
+        string line;
+        ifstream storyFile("chapter" + to_string(chapter) + ".txt");
+
+        if (storyFile.is_open()) {
+            while (getline(storyFile, line)) {
+                cout << line << endl;
+            }
+            storyFile.close();
+        } else {
+            cout << "Unable to open file";
+        }
+    }
+    void nextChapter() {
+        chapter++;
+    }
+};
+
+class Game {
+public:
+    Game() {
+        int y;
+        string Name;
+        int choice;
+        cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
+        cin >> y;
+        characters ch;
+        if (y=='1')
+        {
+            human* selectedCharacter = ch.choice();
+            if (selectedCharacter) {
+                StoryHandler story;
+                while (true)
+                {
+                    story.displayStory();
+                }
+            
+            }
+        
+        } else if (y=='2'){
+            string gender;
+            cout << "choose a name for your character:\n";
+            getline(cin ,Name);
+            cout << "\n1.Male\n2.Female\n";
+            cin >> gender;
+            cout << "how strong you like to be?!\n" << "1.noob\n2.normal\n3.pro\n";
+            cin >> choice;
+            if (choice==1)
+            {
+                human player(Name,10 ,gender ,1 ,20 ,10 ,20);
+
+            } else if (choice==2)
+            {
+            /* code */
+            } else
+            {
+            /* code */
+            }
+         
+
+        } else {
+            cout << "unvalid choice\n";
+        }
+
+        }
+
+};
