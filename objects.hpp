@@ -10,8 +10,8 @@ using namespace std;
 
 
 
-const int SP_CHAR_DELAY_DEFAULT = 30;
-const int SP_PAR_DELAY_DEFAULT = 1000;
+const int SP_CHAR_DELAY_DEFAULT = 15;
+const int SP_PAR_DELAY_DEFAULT = 800;
 
 
 
@@ -34,20 +34,41 @@ namespace utils{
         WHITE
 
     };
+    char waitForInpt(){
+        int i;
+        while(true){
+            if ((kbhit()) && (i = getch())){
+                if (i != 0) return i;
+            };
+        }
+    }
     void slowPrint(string prompt, Color color=WHITE, double char_delay_ms=SP_CHAR_DELAY_DEFAULT){
         for (char c: prompt){
             cout << c;
             Sleep(char_delay_ms);
         }
     }
-    void slowPrintPrompts(vector<string> prompts, Color color=WHITE, double char_delay_ms=SP_CHAR_DELAY_DEFAULT, double sentence_delay_ms=SP_PAR_DELAY_DEFAULT, string sentence_sep = "\n"){
+    int slowPrintPrompts(vector<string> prompts, vector<int> input_vector={}, double char_delay_ms=SP_CHAR_DELAY_DEFAULT, double sentence_delay_ms=SP_PAR_DELAY_DEFAULT, string sentence_sep = "\n", Color color=WHITE){
+        int i;
         for (int i = 0; i < prompts.size(); i++){    
             for (char c: prompts[i]){
+                if ((kbhit())&&(i = getch())){
+                    if (find(input_vector.begin(), input_vector.end(), i) != input_vector.end()) return i;
+                };
                 cout << c;
                 Sleep(char_delay_ms);
             }
             Sleep(sentence_delay_ms);
             if (i != prompts.size()) cout << sentence_sep;
+        }
+        if (input_vector.size() > 0){
+            while (true){
+                int input = waitForInpt();
+                if (find(input_vector.begin(), input_vector.end(), input) == input_vector.end()){
+                    
+                }
+                else return input;
+            }
         }
     }
     void cls(){
@@ -55,11 +76,34 @@ namespace utils{
     }
     void cll() {
     }
-    char waitForInpt(){
+    int promptUser(vector<string> choices, vector<string> prompt ={}, vector<vector<string>> choice_descriptions = {}, bool prompt_first = false){  
+        int choice = 0;
+
         while(true){
-            if (kbhit()) return getch();
+            cls();
+            int max_choice_length = 0;
+            for (int i = 0; i < choices.size(); i++){
+                if (choices[i].length() > max_choice_length) max_choice_length = choices[i].length();
+                if (i == choice) cout << '>';
+                cout << i+1 << ". " << choices[i] << endl;
+            }
+            for (int i = 0; i < max_choice_length*1.2; i++) cout << '~';
+            cout << endl;
+            int ud = slowPrintPrompts(prompt, {72, 80, 13});
+            if (ud == 72){
+                choice = max(choice - 1, 0);
+            }
+            else if (ud == 80){
+                choice = min(choice + 1, int(choices.size()) - 1);
+            }
+            else if (ud == 13){
+                return choice + 1;
+            }
         }
     }
+    // int promptUserPF(vector<string> choices, vector<string> description){
+        
+    // }
 }
 
 class Item{
@@ -67,58 +111,50 @@ class Item{
 protected:
     Human* owner;
     string name;
-    int use_limit;
-    int uses_left;
-    int size;
+    string description;
 
 public:
-    Item(string argName, int argU_Limit, int argU_Left, int argSize=1);   string getname(){return name;};
-    void setName(string argName);
-
-    virtual string getType();
-
-    int getUseLimit();
-    int getUsesLeft();
-    void decrementUsesLeft(int num=1);
     virtual void putInInv(Human* human);
+
+
+    string getDesc();
+    void setDesc(string desc);
+    Item(string argName);
+    string getname(){return name;};
+    virtual string getType();
+    void setName(string argName);
 };
 
 
 class Weapon: public Item{
-
 protected:
-    enum MOD{};
-    int dmg;
-    MOD modifier;
+    vector<DamageComponent> dcvector;
+    int basedmg;
 
 public:
-    Weapon(string argName, MOD argMod, int argDMG, int argSize);
-    
     virtual void attack(Entity*);
+    virtual int estimateDamage(Entity* entity);
+
+    virtual vector<DamageComponent> getDcVector();
+    Weapon(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner);
     virtual string getType();
 };
 
-class firearm: public Weapon{
-    //takes pointer to a character's ammo box
+class Firearm: public Weapon{
+    
 };
 
-class melee: public Weapon{
-
-};
-
-struct SpecialWeaponFunction{
+class Melee: public Weapon{
 
 };
 
 class ValuedComponent {
 protected:
     int max_value;
-    int value;
 public:
-    virtual int usePercent();
+
+    
     virtual string getType();
-    virtual void setVal(int val);
-    virtual int getVal();
     virtual int getMaxVal();
 };
 
@@ -126,18 +162,18 @@ public:
 struct Stat {
     class HealthComponent : public ValuedComponent {
     public:
-        HealthComponent(int v, int mv = -1);
+        HealthComponent(int v);
         string getType() override;
     };
 
     class StaminaComponent : public ValuedComponent {
     public:
-        StaminaComponent(int v, int mv = -1);
+        StaminaComponent(int v);
         string getType() override;
     };
 };
 
-
+//tbi
 struct Damage_Type{
     
 };
@@ -146,20 +182,19 @@ struct Damage_Type{
 class Consumable: public Item {
     vector<ValuedComponent*> valueComponents;
 public: 
-    Consumable(string name, int use_limit, int uses_left, vector<ValuedComponent*> VCs={}, int size=1);
-    void addVC(ValuedComponent* vc);
+    Consumable(string name, vector<ValuedComponent*> VCs={});
     string getType();
     vector<ValuedComponent*>& getValueComponents();
     //switch out the inheritance just for types and the other thing
 
+
+    void addVC(ValuedComponent* vc);
     void apply(Entity* entity);
-    void update();
 };
 
-class Throwable: public Item {
-    int damage;
+class Throwable: public Weapon{
 public:
-    Throwable(int damage);
+    Throwable(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner);
     string getType();
 };
 
@@ -169,6 +204,8 @@ class Entity {
 protected:
     string name;
     int age;
+    string weaknesses; //a string that represents weakness array. ice being in the stirng means the entity is weak against ice, etc.
+    string withstands; //same thing as weaknesses stirng
     string gender; 
     int lvl;
     int hp;
@@ -177,10 +214,24 @@ protected:
     int sta;
     int max_sta;
 public:
+    virtual bool isAlive();
+    void heal(int amount);
+    void increaseStamina(int amount);
+    int healAmount(int amount);
+    int increaseStaminaAmount(int amount);
+    int hpFullPercent();
+    int staminaFullPercent();
+    virtual int calculateDmg(DamageComponent);
+    void takeDamage(int damage);
+    virtual void dealDamage(int amount, Entity* entity);
+    virtual void consumeComponent(ValuedComponent *vc);
+    virtual int calculateDmgWpn(Weapon* weapon);
+    virtual void getAttacked(Weapon* weapon);
+    virtual void die()=0;
+
     Entity();
     Entity(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, int argSTA);
     virtual string getType();
-    virtual bool isAlive();
     int getHp();
     string getname();
     int getSta();
@@ -188,86 +239,190 @@ public:
     int getStaMax();
     int getLVL();
     int getDMG();
-    void heal(int amount);
-    void increaseStamina(int amount);
-    virtual int calculateDmg(int damage);
-    void takeDamage(int damage);
-    int hpFullPercent();
-    int staminaFullPercent();
-    virtual void consumeComponent(ValuedComponent *vc);
-    virtual void dealDamage(int amount, Entity* entity);
-
+    void takeIntDamage(int);
 };
 
 
 class Human: public Entity {
 protected:
-    Item* item_at_hand;
+    Weapon* item_at_hand;
     vector<Item*> inventory;
-
+    int combat_tokens;
 public:
-    Human(string argName, int argAge, string argGender, vector<Item*> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
-    virtual string getType();
-    string getname();
-    vector<Item*> getInv();
-    vector<Consumable*> getConsumablesInv();
+    virtual void attackWith(Weapon* weapon, Entity* entity)=0;
     virtual void use(Item*);
-    virtual void useWeapon(Weapon*, Entity*);
+    virtual void useFirearm(Firearm*, Entity*);
+    virtual void useMelee(Melee*, Entity*);
     virtual void useThrowable(Throwable*, Entity*);
     virtual void useConsumable(Consumable*);
     virtual void takeInInv(Item* item);
     virtual void consumeConsumable(Item* consumable);
     virtual void removeFromInv(Item* item);
+    int effectiveValue(ValuedComponent* vcptr);
+    vector<string> getItemNames();
 
+
+    Human(string argName, int argAge, string argGender, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    virtual string getType();
+    string getname();
+    vector<Item*> getInv();
+    vector<Consumable*> getConsumablesInv();
 };
 
 
 class Player: public Human {
-    // Assuming DamageComponent is correctly implemented elsewhere.
-    friend class DamageComponent;
 
 public:
-    Player(string argName, int argAge, string argGender, vector<Item*> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
-    virtual string getType();
     int atkBar();
     virtual void attack(Entity* entity);
-    int menuPrompt();
+    int CombatMenuPrompt();
     void inventoryPrompt(); //throwable, consumable, ammo_box, needle, ...
     void meleePrompt();
     void shootPrompt();
+    void attackWithMelee(Weapon* weapon, Entity* entity);
+
+
+    Player(string argName, int argAge, string argGender, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    virtual string getType();
 };
 
 
 class Enemy : public Entity {
 public:
-    virtual void attack(Player* player);
+    virtual void attack(Player* player)=0;
+
+
     virtual string getType() override;
 };
-
-
-
-class HumanEnemy : public Human {
-    string dialogue;
-    Player* target; 
-public:
-    HumanEnemy(string argName, int argAge, string argGender, vector<Item*> argInv={}, Item* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
-    virtual string getType() override;
-    int useEfficiency();
-    void updateInventory();
-};
-
-
-class DamageComponent {
+class DamageComponent{
+    enum class type{
+        regular,
+        ice,
+        fire,
+        explosion, 
+        peanut_butter
+    };
+    type dmgType;
+    string special;
     int damage;
 public:
     virtual int simulateDamage(Entity* entity);
-    virtual int deal(Entity* entity);
+    virtual int deal(Entity* entity);//remove
+
+
+    string getTypeStr();
+    int getDmg();
+};
+class Zombie: public Enemy{
+    enum type{
+        CommonHusk,
+        //tbi
+    };
+    DamageComponent dmgcmp;
+public:
+    void attack(Player* player) override;
 };
 
-void Player::attack(Entity* entity){
-    entity->takeDamage(dmg);
+class HumanEnemy : public Human, public Enemy {
+    string dialogue;
+    Player* target; 
+public:
+    int usePercentVC(ValuedComponent* vcptr);
+    int usePercentConsumable(Consumable* cons);
+    void updateInventory();
+
+
+    HumanEnemy(string argName, int argAge, string argGender, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    virtual string getType() override;
+    void attack(Player* player) override;
+};
+
+vector<string> Human::getItemNames(){
+    vector<string> names = {};
+    for (Item* i: inventory){
+        names.push_back(i->getname());
+    }
+    return names;
 }
-int Player::menuPrompt(){
+
+string Item::getDesc(){
+    return description;
+}
+
+void Item::setDesc(string desc){
+    description = desc;
+}
+
+void Player::attackWithMelee(Weapon* weapon, Entity* entity){
+    entity->getAttacked(weapon);
+    entity->takeIntDamage(dmg);
+    utils::slowPrintPrompts({"You dealt ", to_string(entity->calculateDmgWpn(weapon)), " points of damage to ", entity->getname()});
+    //
+}
+//maybe switch out the void stuff with stirngs that return the prompts for the attack. or don't
+
+int DamageComponent::getDmg(){
+    return damage;
+}
+
+vector<DamageComponent> Weapon::getDcVector(){
+    return dcvector;
+}
+
+void Entity::getAttacked(Weapon* weapon){
+    if (calculateDmgWpn(weapon) >= hp) this->die();
+    else{
+        hp -= calculateDmgWpn(weapon);
+    }
+}
+
+int Entity::calculateDmgWpn(Weapon* weapon){
+    int sum = 0;
+    for (auto dc: weapon->getDcVector()){
+        sum += calculateDmg(dc);
+    }
+    return sum;
+}
+
+void HumanEnemy::attack(Player* player){
+    player->getAttacked(item_at_hand);
+}
+
+Throwable::Throwable(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner)
+    :Weapon(argName, dcs, argDMG, argOwner){};
+
+void Zombie::attack(Player* player){
+    player->takeDamage(dmg);
+}
+
+int Weapon::estimateDamage(Entity* entity){
+    int sum = 0;
+    for (auto dc: dcvector){
+        sum += entity->calculateDmg(dc);
+    }
+    return sum;
+};
+
+string DamageComponent::getTypeStr(){
+    switch (dmgType){
+        case type::regular:
+        return "regular";
+        case type::ice:
+        return "ice";
+        case type::fire:
+        return "fire";
+        case type::explosion:
+        return "explosion";
+        case type::peanut_butter:
+        return "peanut";
+    }
+}
+
+void Player::attack(Entity* entity){
+    entity->getAttacked(item_at_hand);
+}
+
+int Player::CombatMenuPrompt(){
     utils::slowPrintPrompts({"what will you do?", "1. Attack With Firearm","2. Melee", "3. Inventory"});
     switch (utils::waitForInpt()){
         case '1':
@@ -283,20 +438,27 @@ int Player::menuPrompt(){
             utils::slowPrint({"That's not a thing you can do!"}, utils::WHITE, 10);
     }
 };
+//tbitbitbi
 void Player::inventoryPrompt(){};
 void Player::meleePrompt(){};
 void Player::shootPrompt(){};
 void Entity::dealDamage(int amount, Entity* entity){
     entity->takeDamage(amount);
 }
-
+void Entity::takeIntDamage(int amount){
+    hp = max(hp - amount, 0);
+}
+//TBITBITBITBIBT(?)
 void Human::use(Item* item){
 
 }
 
-void Human::useWeapon(Weapon* weapon, Entity* entity){
+void Human::useFirearm(Firearm* weapon, Entity* entity){
     
 }
+void Human::useMelee(Melee* weapon, Entity* entity){
+
+};
 
 void Human::useThrowable(Throwable* throwable, Entity* entity){
 
@@ -346,33 +508,19 @@ void Human::takeInInv(Item* item){
     //: item's put in inventory function gets called, which in turn calls the human's take in inventory function. at the end of all that the item knows who owns it and the human knows that it's in their inventory.
 }
 
-void Consumable::update(){
-    if (uses_left == 0){
-        //remove from inventory, then remove object from memory
-        //it can only be in one inventory so it should have a pointer to that inventory/just the entity maybe?
-        //use action should call the use action of the entity attached
-    }
-}
 
-Item::Item(string argName, int argU_Limit, int argU_Left, int argSize)
-    :name(argName), use_limit(argU_Limit), uses_left(argU_Left), size(argSize){};
+
+Item::Item(string argName)
+    :name(argName){};
 
 void Item::setName(string argName){name = argName;}
 
 string Item::getType(){
-        return "Item";
-    }
+    return "Item";
+}
 
-int Item::getUseLimit(){return use_limit;}
-
-int Item::getUsesLeft(){return uses_left;}
-
-void Item::decrementUsesLeft(int num){uses_left-= num;}
-
-
-
-Weapon::Weapon(string argName, MOD argMod, int argDMG, int argSize)
-    :Item(argName, INFINITE, INFINITE, argSize), modifier(argMod), dmg(argDMG){};
+Weapon::Weapon(string argName, vector<DamageComponent> argMod, int argDMG, Human* argOwner)
+    :Item(argName), dcvector(argMod), basedmg(argDMG){owner = argOwner;};
 
 //tbi
 void Weapon::attack(Entity*){};
@@ -381,47 +529,26 @@ string Weapon::getType(){
     return "Weapon";
 }
 
-int ValuedComponent::usePercent() {
-    return value * 100 / max_value;
-}
-
 string ValuedComponent::getType() {
     return "ValuedComponent";
 }
 
-void ValuedComponent::setVal(int val) {
-    value = val;
-}
-
-int ValuedComponent::getVal() {
-    return value;
-}
 
 int ValuedComponent::getMaxVal() {
     return max_value;
 }
 
 
-Stat::HealthComponent::HealthComponent(int v, int mv) {
-    if (mv == -1) {
-        max_value = v;
-    } else {
-        max_value = mv;
-    }
-    value = v;
+Stat::HealthComponent::HealthComponent(int v) {
+    max_value = v;
 }
 
 string Stat::HealthComponent::getType() {
     return "HealthComponent";
 }
 
-Stat::StaminaComponent::StaminaComponent(int v, int mv) {
-    if (mv == -1) {
-        max_value = v;
-    } else {
-        max_value = mv;
-    }
-    value = v;
+Stat::StaminaComponent::StaminaComponent(int v) {
+    max_value = v;
 }
 
 string Stat::StaminaComponent::getType(){
@@ -430,8 +557,8 @@ string Stat::StaminaComponent::getType(){
 
 
 
-Consumable::Consumable(string name, int use_limit, int uses_left, vector<ValuedComponent*> VCs, int size)
-: Item(name, use_limit, uses_left, size), valueComponents(VCs) {}
+Consumable::Consumable(string name, vector<ValuedComponent*> VCs)
+: Item(name), valueComponents(VCs) {}
 
 void Consumable::addVC(ValuedComponent* vc) {
     valueComponents.push_back(vc);
@@ -447,12 +574,7 @@ vector<ValuedComponent*>& Consumable::getValueComponents() {
 
 void Consumable::apply(Entity* entity) {
     for (ValuedComponent* v : valueComponents) {    
-        if (auto vc = dynamic_cast<Stat::HealthComponent*>(v)){
-            entity->heal(vc->getVal());
-        }
-        else if (auto vc = dynamic_cast<Stat::StaminaComponent*>(v)){
-            entity->increaseStamina(vc->getVal());
-        }
+        entity->consumeComponent(v);
     }
 }
 
@@ -499,6 +621,14 @@ int Entity::getDMG() {
     return dmg;
 }
 
+int Entity::healAmount(int amount){
+    return min(hp + amount, max_hp) - hp;
+}
+
+int Entity::increaseStaminaAmount(int amount){
+    return min(hp + amount, max_hp) - hp;
+}
+
 void Entity::heal(int amount) {
     hp = min(max_hp, hp + amount);
 }
@@ -507,12 +637,17 @@ void Entity::increaseStamina(int amount) {
     sta = min(max_sta, sta + amount);
 }
 
-int Entity::calculateDmg(int damage) {
-    return damage;
+int Entity::calculateDmg(DamageComponent dmgcmp) { //should take damage component in actually
+    if (weaknesses.find(dmgcmp.getTypeStr()) != string::npos){
+        return 1.5 * dmgcmp.getDmg();
+    }
+    else if (withstands.find(dmgcmp.getTypeStr()) != string::npos){
+        return 0.75 * dmgcmp.getDmg();
+    }
 }
 
 void Entity::takeDamage(int damage) {
-    hp -= calculateDmg(damage);
+    hp -=damage;
 }
 
 int Entity::hpFullPercent() {
@@ -528,14 +663,14 @@ int Entity::staminaFullPercent() {
 void Entity::consumeComponent(ValuedComponent* vc) {
     string type = vc->getType();
     if (type == "HealthComponent"){
-        this->heal(vc->getVal());
+        this->heal(vc->getMaxVal());
     }
     else if (type == "StaminaComponent"){
-        this->increaseStamina(vc->getVal());
+        this->increaseStamina(vc->getMaxVal());
     }
 }
 
-Human::Human(string argName, int argAge, string argGender, vector<Item*> argInv, Item* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
+Human::Human(string argName, int argAge, string argGender, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
     : Entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA), item_at_hand(argItemAtHandPTR), inventory(argInv) {}
 
 string Human::getType() {
@@ -563,15 +698,11 @@ vector<Consumable*> Human::getConsumablesInv(){
 
 
 
-Player::Player(string argName, int argAge, string argGender, vector<Item*> argInv, Item* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
+Player::Player(string argName, int argAge, string argGender, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
     : Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argSTA) {}
 
 string Player::getType() {
     return "Player";
-}
-
-void Enemy::attack(Player* player) {
-    player->takeDamage(dmg);
 }
 
 string Enemy::getType() {
@@ -580,25 +711,42 @@ string Enemy::getType() {
 
 
 
-HumanEnemy::HumanEnemy(string argName, int argAge, string argGender, vector<Item*> argInv, Item* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
+HumanEnemy::HumanEnemy(string argName, int argAge, string argGender, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
 : Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argSTA) {}
 
 string HumanEnemy::getType() {
     return "HumanEnemy";
 }
 
-int HumanEnemy::useEfficiency() {
-    
-    return 0; // Placeholder return
+
+int HumanEnemy::usePercentVC(ValuedComponent* vcptr) {
+    return effectiveValue(vcptr)/vcptr->getMaxVal();
 }
 
+int HumanEnemy::usePercentConsumable(Consumable* cons){
+    vector<ValuedComponent*> vcs = cons->getValueComponents();
+    int sum = 0;
+    for (ValuedComponent* vc: vcs){
+        sum += effectiveValue(vc);
+    }
+    return sum/vcs.size();
+}
+int Human::effectiveValue(ValuedComponent* vcptr){
+    if (auto ptr = dynamic_cast<Stat::HealthComponent*>(vcptr)){
+        return min(vcptr->getMaxVal() + hp, max_hp);
+    }
+    else if (auto ptr = dynamic_cast<Stat::StaminaComponent*>(vcptr)){
+        return min(vcptr->getMaxVal() + sta, max_sta);
+    }
+}
+//tbi? what even is this for?
 void HumanEnemy::updateInventory() {
     for (auto& item : inventory) {
         if (item->getType() == "Consumable") {
             Consumable* conptr = dynamic_cast<Consumable*>(item);
             if (conptr) {
                 for (ValuedComponent* vc : conptr->getValueComponents()) {
-                    
+                    //?
                 }
             }
         }
@@ -607,9 +755,9 @@ void HumanEnemy::updateInventory() {
 
 
 int DamageComponent::simulateDamage(Entity* entity) {
-    return entity->calculateDmg(damage);
+    return entity->calculateDmg(*this);
 }
-
+//tbi?
 int DamageComponent::deal(Entity* entity) {
     // Implementation
     return 0; // Placeholder return

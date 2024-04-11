@@ -47,7 +47,7 @@ protected:
     MOD modifier;
 
 public:
-    Weapon(string argName, MOD argMod, int argDMG, int argSize)
+    Weapon(string argName, MOD argMod, int argDMG, int argSize, )
     :Item(argName, INFINITE, INFINITE, argSize), modifier(argMod), dmg(argDMG){};
     
     virtual void attack(Entity*){};

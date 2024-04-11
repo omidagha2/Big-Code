@@ -22,10 +22,12 @@ int main(){
     // for (Item* i: bro.getInv()) utils::slowPrintPrompts(prompts1);
 
 
-    Player ali("ali", 12, "male");
-    ali.menuPrompt();
-    // cout << endl << ali.atkBar();
+    // Player ali("ali", 12, "male");
+    // ali.menuPrompt();
 
+    // cout << endl << ali.atkBar();
+    // cout << utils::slowPrintPrompts({"the enemy attacked you for 10 damage!","you are dead!"}, {' '});
+    cout << utils::promptUser({"bruh", "sis", "ma", "daddy"});
     //how combat?
     //there should be rewards, consumable & coins.
     //there should be turns
