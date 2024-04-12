@@ -57,71 +57,10 @@ enum class Behavior{
 #include <vector>
 #include <algorithm>
 using namespace std;
-
-struct Item {
-    string name;
-    double price;
-    int quantity;
-
-    Item(string n, double p, int q) : name(n), price(p), quantity(q) {}
-};
-
-bool compareByName(const Item& a, const Item& b) {
-    return a.name < b.name; // Sort by name in ascending order
-}
-
-class Store {
-private:
-    vector<Item> items;
-
-public:
-    Store() {
-        items.emplace_back("Kalashnikov", 1000.0, 10);
-        items.emplace_back("pistol", 500.0, 20);
-        // ... Add other items ...
-    }
-
-    void print() {
-        cout << "Items in store:" << endl;
-        cout << "-----------------------------------------" << endl;
-        cout << "| Item Name     | Price ($) | Quantity |" << endl;
-        cout << "-----------------------------------------" << endl;
-        for (const auto& item : items) {
-            cout << "| " << item.name << " | $" << item.price << " | " << item.quantity << " |" << endl;
-        }
-        cout << "-----------------------------------------" << endl;
-    }
-
-    void reduceQuantity(const string& itemName, int quantityToReduce) {
-        for (auto& item : items) {
-            if (item.name == itemName) {
-                if (item.quantity >= quantityToReduce) {
-                    item.quantity -= quantityToReduce;
-                    cout << "Reduced " << quantityToReduce << " " << itemName << "(s) from the store." << endl;
-                } else {
-                    cout << "Insufficient quantity of " << itemName << " in the store." << endl;
-                }
-                return;
-            }
-        }
-        cout << "Item not found in the store." << endl;
-    }
-
-    void sortItemsByName() {
-        sort(items.begin(), items.end(), compareByName);
-    }
-};
-
-int main() {
-    Store myStore;
-    myStore.sortItemsByName(); // Sort items by name
-    myStore.print(); // Print sorted items
-    myStore.reduceQuantity("pistol", 2); // Example of reducing quantity
-    return 0;
-}
  
 
 class item{
+    friend class entity;
 protected:
     string name;
     int use_limit;
@@ -132,18 +71,21 @@ public:
     item(string name, int argU_Limit, int argU_Left, int argSize){}
     string nameofIt(){ cin >> name; return name;}
     item(){}
+
 };
 
 class weapon: public item{
 protected:
     MOD modifier;
     int dmg;
+    
 
 public:
+    weapon()=default;
     weapon(string name, MOD argMod, int argDMG, int argSize)
     :item("",infinite, infinite, argSize), modifier(argMod), dmg(argDMG) {
-
     }
+    int damage() {return dmg;}
 };
 
 class store:public item {
@@ -175,9 +117,8 @@ protected:
     int coin;
 
 public:
-    virtual void attack(entity* x)=0;
-
-    entity()=default;
+    entity() : name(""), age(0), gender(""), lvl(1), hp(100), dmg(10), sta(10), coin(0) {}
+    virtual void attack(entity* x,weapon* weapon_at_hand)=0;
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){}
     string getName() const {return name;}
@@ -194,18 +135,20 @@ public:
 
 class human: public entity{
 protected:
+    weapon weapon_at_hand;
     item item_at_hand;
     vector<vector<string>> inventory={{"weopons"},{"healer Items"},{"throwable Items"}};
     int skills[SKILLS_IMPLEMENTED];
 
 public: 
+    human()=default;
     human(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
     : entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA),item_at_hand("",0,0,0) {
         
     }
-    human(){}
-    virtual void attack(entity* x) {
-
+    void attack(entity* x,weapon* weapon_at_hand) override{
+        int a=x->getHp()-weapon_at_hand->damage();
+        x->setHp(a);
     }
     item changeHeldItem(string pack) {
         item Item;
@@ -271,9 +214,9 @@ public:
         
     }
 
-    void attack(entity* a,weapon* wepon) {
-        a->hp-=
-
+    void attack(entity* x,weapon* weapon_at_hand)override {
+        int a=x->getHp()-weapon_at_hand->damage();
+        x->setHp(a);
     }
 
     bool isDefeated() const {
@@ -296,8 +239,9 @@ public:
         enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
     }
    
-    void attack(entity* a) {
-
+    void attack(entity* x,weapon* weapon_at_hand)override {
+        int a=x->getHp()-weapon_at_hand->damage();
+        x->setHp(a);
     }
 
     bool isDefeated() const {
