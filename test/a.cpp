@@ -1,13 +1,9 @@
 #include <iostream>
-class a;
-
-class b{
-  void hi(a a1){};
-};
-
-class a{
-  void hi(b b1){}
-};
+#include <algorithm>
+#include <stdlib.h>
+using namespace std;
 
 int main(){
+  string s = "a";
+  cout << (s.find("a") == string::npos);
 }
