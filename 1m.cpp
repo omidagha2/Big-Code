@@ -1,4 +1,3 @@
-#include <string>
 #include <vector>
 #include <iostream>
 #include <windows.h>
@@ -53,25 +52,25 @@ enum class Behavior{
     // some more behaviors TBD
 };
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-using namespace std;
- 
-
 class item{
-    friend class entity;
 protected:
-    string name;
     int use_limit;
     int uses_left;
     int size;
 
 public:
-    item(string name, int argU_Limit, int argU_Left, int argSize){}
-    string nameofIt(){ cin >> name; return name;}
-    item(){}
-
+    string name;
+    double price;
+    int quantity;
+    string nameofItem(){ cin >> name; return name;}
+    item(string n, double p, int q, int limit, int left, int sz)
+        : name(n), price(p), quantity(q), use_limit(limit), uses_left(left), size(sz) {}
+    item()=default;
+    
+    virtual void print() const {
+        cout << "| " << name << " | $" << price << " | " << quantity << " |" << endl;
+    }
+    string nameof() {return name;}
 };
 
 class weapon: public item{
@@ -83,25 +82,69 @@ protected:
 public:
     weapon()=default;
     weapon(string name, MOD argMod, int argDMG, int argSize)
-    :item("",infinite, infinite, argSize), modifier(argMod), dmg(argDMG) {
+    :item("",0,0,infinite, infinite, argSize), modifier(argMod), dmg(argDMG) {
     }
     int damage() {return dmg;}
+};
+class Store {
+private:
+    vector<item*> items; // Store now holds pointers to Item objects
+
+public:
+    // Constructor
+    Store() {
+        items.push_back(new item("Kalashnikov", 1000.0, 10,infinite,infinite, 1));
+        items.push_back(new item("Pistol", 500.0, 20,infinite,infinite, 1));
+        // ... Add other items ...
+    }
+
+    // Destructor to clean up Item objects
+    ~Store() {
+        for (item* item : items) {
+            delete item;
+        }
+    }
+
+    // Print function to display all items
+    void print() const {
+        cout << "Items in store:" << endl;
+        cout << "-----------------------------------------" << endl;
+        cout << "| Item Name     | Price ($) | Quantity |" << endl;
+        cout << "-----------------------------------------" << endl;
+        for (const item* item : items) {
+            item->print();
+        }
+        cout << "-----------------------------------------" << endl;
+    }
+    void reduceQuantity(const string& itemName, int quantityToReduce) {
+        for (item* item : items) {
+            if (item->name == itemName) {
+                if (item->quantity >= quantityToReduce) {
+                    item->quantity -= quantityToReduce;
+                    cout << "Reduced " << quantityToReduce << " " << itemName << "(s) from the store." << endl;
+                } else {
+                    cout << "Insufficient quantity of " << itemName << " in the store." << endl;
+                }
+                return;
+            }
+        }
+        cout << "Item not found in the store." << endl;
+    }
 };
 
 class store:public item {
     vector<item> weapons;
 
 public:
-    store(): item("", 0, 0, 0){
+    store(): item("", 0, 0, infinite, infinite, 0){
         weapons.emplace_back("Kalashnikov",common, 10,1);
         weapons.emplace_back("pistol",common, 8,1);
         weapons.emplace_back("graneid",common, 10,1);
         weapons.emplace_back("sks",common, 20,1);
         weapons.emplace_back("m14",common, 15,1);
         weapons.emplace_back("knife",common, 5,1);
-
-
     }
+
 
 };
 
@@ -143,7 +186,7 @@ protected:
 public: 
     human()=default;
     human(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
-    : entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA),item_at_hand("",0,0,0) {
+    : entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA),item_at_hand("",0,0,0,0,0) {
         
     }
     void attack(entity* x,weapon* weapon_at_hand) override{
@@ -151,7 +194,6 @@ public:
         x->setHp(a);
     }
     item changeHeldItem(string pack) {
-        item Item;
         for (int i = 0; i < 3; i++)
         {
             if (inventory[i][0]==pack)
@@ -159,9 +201,9 @@ public:
                 for (int j = 0; j < inventory[i].size(); j++)
                 {
                     cout << inventory[i][j] << ",,";
-
                 }
-                Item.nameofIt();
+                item Item;
+                Item.nameofItem();
                 item_at_hand=Item;
             }
             
@@ -970,7 +1012,7 @@ public:
     }
     
 };
-
+//////////////
 
 void setConsoleColor(int color){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -1044,6 +1086,7 @@ public:
         if (y==1)
         {
             human* selectedCharacter = ch.choice();
+            //store shop;
             if (selectedCharacter) {
                 StoryHandler story;
                 while (true)
@@ -1054,7 +1097,7 @@ public:
                         int state = rand()%2;
                         if(state==0)
                         {
-
+                            
                         }
 
                     }
