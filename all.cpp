@@ -56,6 +56,7 @@ protected:
     string a[9] = {"Kalashnikov", "pistol", "graneid", "sks", "m14" ,"knife" , "bandaids" , "adrenaline" ," exir_st"};
 double prices[9] = {1000.0, 500.0, 200.0, 300.0, 800.0 , 200.0 ,300.0,290.0 ,219.0}; // Placeholder prices
     int quantities[9] = {10, 20, 15, 8, 5,4,7,9,1}; 
+    int damage[9] = {30, 15, 50, 25, 35, 10, -30, -10, -19}; // Damage values for weapons and non-weapons
 
 public:
     void set(entity& e, int a) {
@@ -97,13 +98,16 @@ class Store : public item {
 public:
     void print() {
         cout << "Items in store:" << endl;
-        cout << "-----------------------------------------" << endl;
-        cout << "| Item Name     | Price ($) | Quantity |" << endl;
-        cout << "-----------------------------------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "| Item Name     | Price ($) | Quantity | Damage (if applicable) |" << endl;
+        cout << "------------------------------------------------------------------" << endl;
         for (int i = 0; i < 9; i++) {
-            cout << "| " << a[i] << " | $" << prices[i] << " | " << quantities[i] << " |" << endl;
+            cout << "| " << a[i];
+            cout.width(14 - a[i].length()); cout << right << "| $" << prices[i];
+            cout.width(12); cout << right << "| " << quantities[i];
+            cout.width(11); cout << right << "| " << (damage[i] ? to_string(damage[i]) : "N/A") << " |" << endl;
         }
-        cout << "-----------------------------------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
     }
 
     void reduceQuantity(const string& itemName, int quantityToReduce) {
