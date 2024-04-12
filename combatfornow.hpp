@@ -7,11 +7,11 @@ public:
     static vector<Item*> getAllPossibleItems() {
         vector<Item*> items;
         // Define various items
-        items.push_back(new Consumable("Health Kit", {new Stat::HealthComponent(50)}, {"Heals 50 HP. A magical spray!"}));
-        items.push_back(new Consumable("Round Candy", {new Stat::StaminaComponent(10)}, {"Increases stamina. Super sweet!", "no wonder mom hid them all for herself"}));
-        items.push_back(new Consumable("Grenade", {new Stat::HealthComponent(-30)}, {"Deals 30 damage. It's a loud balloon pop!"}));
-        items.push_back(new Weapon("Laser Gun", {DamageComponent(15, DamageComponent::TYPE::fire)}, 15, nullptr));
-        items.push_back(new Weapon("Baseball Bat", {DamageComponent(10)}, 10, nullptr));
+        items.push_back(new Consumable("Health Kit", {new Stat::HealthComponent(50)}, {}, {"Heals 50 HP.", "Some bandaid and some magical spray!"}));
+        items.push_back(new Consumable("Round Candy", {new Stat::StaminaComponent(1)},  {"Increases stamina. ", "Super sweet, super energizing! no wonder mom hid them all for herself"}));
+        items.push_back(new Consumable("Grenade", {}, {DamageComponent(3, DamageComponent::TYPE::explosion)}, {"Deals 30 damage.", "You don't remember where you found this."}));
+        items.push_back(new Weapon("Laser Gun", {DamageComponent(4, DamageComponent::TYPE::fire)}));
+        items.push_back(new Weapon("Baseball Bat", {DamageComponent(10)}, {}));
         // Add more items as needed
         return items;
     }
@@ -32,9 +32,9 @@ namespace level3enemies{
 // list of prompts for enemies.
 class Combat{
     Player* you;
-    Entity* foe;
+    Enemy* foe;
     public:
-    Combat(Player* player, Entity* target){you = player; foe = target;}
+    Combat(Player* player, Enemy* target){you = player; foe = target;}
     Player* getPlayer(){return you;}
     Entity* getFoe(){return foe;}
     void pushPrompt(){
@@ -46,8 +46,7 @@ class Combat{
             pushPrompt();
         }
         else if (auto man = dynamic_cast<HumanEnemy*>(foe)){//fsm here
-            man->attackWith(man->getItemAtHand(), you);
-            pushPrompt();
+            runfsm();
         }
     }
     int attackFoe(){
@@ -76,20 +75,53 @@ class Combat{
             }
         }
     }
+
+    void runfsm(){
+        
+    }
 };
 
-class Combat1: public Combat{//for regular zombies and stuff, just a vector of prompts from the narrator. 
-    // vector<string> prompts;
-    // string default_prompt;
-    // public:
-    // Combat1(string dp = "", vector<string> ARGprompts = {}){
-    //     prompts = ARGprompts;
-    //     default_prompt = dp;
-    // }
-    
+class MultiplayerCombat{
+private:
+    Player boy;
+    Player girl;
+    bool turnOfBoy;  // True if it's the boy's turn, false if it's the girl's
 
-};
+public:
+    MultiplayerCombat(): turnOfBoy(false){
+        utils::slowPrintPrompts({"There's a boy playing with some toys.", "He has an awesome laser gun.", "What is his name? "});
+        string name;
+        cin >> name;
+        // boy = Player(name, );//!
+    }
 
-class Combat2: public Combat{//for those who talk a lot
+    void startCombat() {
+        while (boy.isAlive() && girl.isAlive()) {
+            displayTurnPrompt();
+            // if (turnOfBoy) {
+            //     boy.attack(&girl);
+            // } else {
+            //     girl.attack(&boy);
+            // }
+            turnOfBoy = !turnOfBoy;
+            if (!boy.isAlive() || !girl.isAlive()) {
+                announceWinner();
+                break;
+            }
+        }
+    }
 
+    void displayTurnPrompt(){
+        utils::promptUser({},{turnOfBoy ? boy.getname() : girl.getname() + "'s turn. Get ready for some action!\n"});
+        utils::promptUser({},{turnOfBoy ? "The Boy readies his laser gun!" : "The Girl waves her sparkly magic wand!"});
+    }
+
+    void announceWinner(){
+        if (!boy.isAlive()){
+            utils::slowPrint("Girl wins with her unstoppable magic powers!");
+        } 
+        else if (!girl.isAlive()){
+            utils::slowPrint(" wins with his awesome laser gun skills!");
+        }
+    }
 };

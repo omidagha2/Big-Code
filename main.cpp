@@ -16,14 +16,11 @@ int main(){
     // cout << typeid(dynamic_cast<HumanEnemy*>(equipped)).name();
 
     //I'm thinking we don't really need value for valued compos rn, they're easily calculated with min
-    Player bro("Yasin", 19, "male");
-    FireArm gun1("yasin's mom's gun", {DamageComponent(12)}, 0, &bro, 100, 100);
-    bro.setfirearm(&gun1);
-    bro.updateRelics();
-    Zombie zomb("ex-michael", 71, "male");
-    HumanEnemy adam("michael", 12, "male", {});
-    Human* adamptr = &adam;
-    Combat combat(&bro, adamptr);
+    Player p1 = Player("kazem", 12, "male", 1, 20, 1);
+    FireArm g1("kazem's glare", {DamageComponent(10, DamageComponent::TYPE::fire)}, {"Deals 10 damage. Inflicts BURN.", "Ever wondered how he looks without his glasses? "}, 999, 999);
+    p1.takeInInv(&g1);
+
+    HumanEnemy p2("erfan", 21, "male", 1, 20, 1);
 
     // bro.takeDamage(12);
     // Stat::HealthComponent hp(100);
@@ -37,7 +34,7 @@ int main(){
     // ali.menuPrompt();
     // Combat combat(&bro, &zomb);
     // combat.foeAttack();
-    combat.attackFoe();
+    // combat.attackFoe();
     // utils::slowPrintPrompts(nextPrompts);
 
     // cout << endl << ali.atkBar();

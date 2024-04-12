@@ -200,7 +200,7 @@ public:
     virtual void putInInv(Human* human);
     virtual void removeFromInv(Human* human);
 
-
+    int getTokenUse(){return token_uses;}
     vector<string> getDesc();
     void setDesc(vector<string> desc);
     Item(string argName);
@@ -221,14 +221,13 @@ public:
 class Weapon: public Item{
 protected:
     vector<DamageComponent> dcvector;
-    int basedmg;
 
 public:
     virtual void attack(Entity*);
     virtual int estimateDamage(Entity* entity);
 
     virtual vector<DamageComponent> getDcVector();
-    Weapon(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner);
+    Weapon(string argName, vector<DamageComponent> dcs, vector<string> desc = {}, Human* argOwner = nullptr);
 
     virtual string getType();
 };
@@ -246,7 +245,7 @@ class FireArm: public Weapon{
     int getMaxAmmo(){return max_ammo;}
     int refillAmmo(int amount = -1){ammo = (amount == -1 ? max_ammo : min(max_ammo, ammo + amount));}
     int decreaseAmmo(int amount = 1){ammo = max(ammo - amount, 0);}
-    FireArm(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner, int ARGmax_ammo, int ARG_ammo);
+    FireArm(string argName, vector<DamageComponent> dcs, vector<string> desc, int ARGmax_ammo, int ARG_ammo, Human* argOwner=nullptr);
 };
 
 class Melee: public Weapon{
@@ -285,11 +284,13 @@ public:
     Consumable(string name, vector<ValuedComponent*> VCs, vector<DamageComponent> DCs={}, vector<string> desc = {}, Human* owner = nullptr, int tokenUses = 1);
     string getType();
     vector<ValuedComponent*>& getValueComponents();
+    int getTotalHealAmount();
     //switch out the inheritance just for types and the other thing
 
 
     void addVC(ValuedComponent* vc);
     void apply(Entity* entity);
+    int getBenefit();
 };
 
 
@@ -304,18 +305,13 @@ protected:
     int hp;
     int max_hp;
     int dmg;
-    int sta;
-    int max_sta;
     int luck;
     vector<string> prompts;
 public:
     virtual bool isAlive();
     void heal(int amount);
-    void increaseStamina(int amount);
     int healAmount(int amount);
-    int increaseStaminaAmount(int amount);
-    int hpFullPercent();
-    int staminaFullPercent();
+    virtual int hpFullPercent();
     virtual int calculateDmg(DamageComponent, double=1);
     void takeDamage(int damage);
     virtual void dealDamage(int amount, Entity* entity);
@@ -327,13 +323,13 @@ public:
     virtual void addwithstand(string str){withstands.append(str);}
 
     string getRandomPrompt() {
-        if (prompts.empty()) return "No prompts available.";
+        if (prompts.empty()) return "This one's got nothing to say";
         return prompts[rand() % prompts.size()];
     }
 
     Entity();
-    Entity(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, int argSTA, string withstandstr = "", string weaknessstr = "", vector<string> argPrompts = {})
-        : name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), max_hp(argHP), dmg(argDMG), sta(argSTA), prompts(argPrompts) {}
+    Entity(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, string withstandstr = "", string weaknessstr = "", vector<string> argPrompts = {})
+        : name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), max_hp(argHP), dmg(argDMG), prompts(argPrompts) {}
     virtual string getType();
     int getHp();
     string getname();
@@ -350,7 +346,6 @@ public:
 
 class Human: public Entity {
 protected:
-    Weapon* item_at_hand;
     Weapon* melee_weapon;
     Weapon* firearm_weapon;
     vector<Item*> inventory;
@@ -358,19 +353,20 @@ protected:
     int combat_tokens;
 public:
     virtual void attackWith(Weapon* weapon, Entity* entity);
-    virtual void use(Item*);
-    virtual void useFireArm(FireArm*, Entity*);
-    virtual void useMelee(Melee*, Entity*);
     virtual void useConsumable(Consumable*);
     virtual void takeInInv(Item* item);
     virtual void consumeConsumable(Item* consumable);
     virtual void removeFromInv(Item* item);
+    virtual void addCombatTokens(int amount){
+        combat_tokens = min(amount + combat_tokens, max_combat_tokens);
+    }
     int effectiveValue(ValuedComponent* vcptr);
     vector<string> getItemNames();
+    Human(){};
 
 
 
-    Human(string argName, int argAge, string argGender, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    Human(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv={}, vector<string> argPrompts={}, string withstandstr="", string weaknessstr="");
     virtual string getType();
     string getname();
     vector<Item*> getInv();
@@ -384,8 +380,6 @@ public:
     Weapon* getFireArm();
     void setMelee(Weapon* fa);
     Weapon* getMelee();
-
-    
 };
 
 
@@ -393,9 +387,9 @@ class Player: public Human {
     vector<Item*> special_items_inventory; //won't fill up.
 public:
     
+    Player(){};
     int atkBarGun(int offset, int length = 11, bool rawscore = false, bool showting = true, char crosshair = '^');
     int atkBarMelee(int offset);
-    virtual void attack(Entity* entity);
     int CombatMenuPrompt(vector<string>);
     void inventoryPrompt(); //throwable, consumable, ammo_box, needle, ...
     void meleePrompt();
@@ -412,18 +406,16 @@ public:
     vector<string> getNextPrompts(){return nextPrompts;}
     virtual ~Player(){};
 
-    Player(string argName, int argAge, string argGender, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    Player(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv={}, string withstr="", string weakstr="");
     virtual string getType();
 };
 
 
 class Enemy : public Entity {
 public:
-    Enemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, int argSTA, vector<string> argPrompts = {})
-    :Entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA, "", "", argPrompts) {}
+    Enemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, string withstr, string weakstr, vector<string> argPrompts = {})
+    :Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts) {}
     Enemy(){};
-    virtual void attack(Player* player)=0;
-
 
     virtual string getType() override;
 };
@@ -441,7 +433,6 @@ private:
     int damage;
 public:
     virtual int simulateDamage(Entity* entity);
-    virtual int deal(Entity* entity);//remove
 
 
     string getTypeStr();
@@ -457,17 +448,20 @@ class Zombie: public Enemy{
     TYPE type;
     DamageComponent dmgcmp;
 public:
-    Zombie(string argName, int argAge, string argGender, int argLVL = 0, int argHP = 20, int argDMG = 1, int argSTA = 20, vector<string> argPrompts = {})
-        : Enemy(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA, argPrompts) {}
+    Zombie(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, string withstr, string weakstr, vector<string> argPrompts = {})
+    :Enemy(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts){}
 
-    void attack(Player* player) override;
+    void zombieAttack(Player* player);
 };
 
+//a punch melee weapon
+
 class HumanEnemy : public Human, public Enemy {
+    friend class Combat;
     enum State{
         CalcBestWeapon,
         Entry,
-        DanerouslyLowHp,
+        DangerouslyLowHp,
         KindaLowHp,
         HpFine,
         AreThereTokens,
@@ -477,6 +471,9 @@ class HumanEnemy : public Human, public Enemy {
     State current_state;
     string dialogue;
     Player* target; 
+    Weapon* bw;
+    int tokens_after_best_weapon;
+    Consumable* bestConsumable;
 public:
     void setCurrentState(State state){current_state = state;}
     State getCurrentState(){return current_state;}
@@ -485,13 +482,34 @@ public:
     void setStatePrompts(vector<string> spv){state_prompts = spv;}
     int usePercentVC(ValuedComponent* vcptr);
     int usePercentConsumable(Consumable* cons);
-    void updateInventory();
-    virtual Weapon* getItemAtHand();
-
-    HumanEnemy(string argName, int argAge, string argGender, vector<string> stateprs, vector<Item*> argInv={}, Weapon* argItemAtHandPTR=nullptr, int argLVL=1, int argHP=100, int argDMG=1, int argSTA=100);
+    Weapon* findBestWeapon(Entity* target);
+    HumanEnemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv={}, vector<string> randomprompts={}, vector<string> stateprs={}, string withstr="", string weakstr="");
     virtual string getType() override;
-    void attack(Player* player) override;
+    int gettabw(){return tokens_after_best_weapon;}
+    void settabw(int amount){tokens_after_best_weapon = amount;}
+    Consumable* findBestConsumableForUtilization();
+    Weapon* calculateBestWeapon(Player* target);
+    int hpFullPercent();
 };
+
+Consumable* HumanEnemy::findBestConsumableForUtilization(){
+    Consumable* bestConsumable = nullptr;
+    double bestBenefitRatio = 0;
+
+    for (Item* item : inventory) {
+        Consumable* consumable = dynamic_cast<Consumable*>(item);
+        if (consumable) {
+            int totalBenefit = consumable->getBenefit();
+            int cost = consumable->getTokenUse();
+            double benefitRatio = cost > 0 ? double(totalBenefit) / cost : 0;
+
+            if (cost <= combat_tokens - tokens_after_best_weapon && benefitRatio > bestBenefitRatio) {
+                bestBenefitRatio = benefitRatio;
+                bestConsumable = consumable;
+            }
+        }
+    }
+}
 
 int Player::atkBarGun(int offset, int length, bool rawscore, bool showthing, char crosshair){
     int score = 1;
@@ -529,7 +547,6 @@ int Player::atkBarGun(int offset, int length, bool rawscore, bool showthing, cha
         }
         score += way;
         cout << (way < 0 ? backspc : forward);
-        // cout << (way < 0 ? "\b \b\b^" : "\b ^ ");
     }
 }
 
@@ -544,11 +561,12 @@ DamageComponent::DamageComponent(int dmg, TYPE type){
     damage = dmg;
     dmgType = type;
 };
-Weapon* HumanEnemy::getItemAtHand(){
-        return item_at_hand;
+
+int HumanEnemy::hpFullPercent(){
+
 };
 
-Consumable::Consumable(string name, vector<ValuedComponent*> VCs, vector<DamageComponent> DCs, vector<string> desc = {}, Human* owner = nullptr, int tokenUses = 1)
+Consumable::Consumable(string name, vector<ValuedComponent*> VCs, vector<DamageComponent> DCs, vector<string> desc, Human* owner, int tokenUses)
     : Item(name, desc, owner, tokenUses), valueComponents(VCs), damageComponents(DCs) {}
 
 void Player::updateRelics(){
@@ -575,8 +593,64 @@ void Item::setOwner(Human* human){
     owner = human;
 }
 
+Weapon* HumanEnemy::calculateBestWeapon(Player* target){
+    bw = nullptr; 
+    double bestRatio = 0; 
+
+    for (Item* item : inventory){
+        Weapon* weapon = dynamic_cast<Weapon*>(item);
+        if (weapon){
+            int damage = weapon->estimateDamage(target);
+            int cost = weapon->getTokenUse();
+            double ratio = (cost > 0 ? (double(damage))/cost : 0);
+
+            if (ratio > bestRatio){
+                bestRatio = ratio;
+                bw = weapon;
+                tokens_after_best_weapon = combat_tokens - cost;
+            }
+        }
+    }
+
+
+    if (bw){
+        nextPrompts.push_back("selected best weapon: " + bw->getname() + " with damage-to-token ratio: " + std::to_string(bestRatio));
+    }
+    else{
+        nextPrompts.push_back("No suitable weapon found.");
+    }
+};
+
+Weapon* HumanEnemy::findBestWeapon(Entity* target){
+    Weapon* bestWeapon = nullptr;
+    double bestRatio = 0.0;
+    for (Item* item: inventory){
+        Weapon* weapon = dynamic_cast<Weapon*>(item);
+        if (weapon){
+            int damage = weapon->estimateDamage(target);
+            int tokenCost = weapon->getTokenUse();
+            double ratio = tokenCost > 0 ? static_cast<double>(damage) / tokenCost : 0;
+            if (ratio > bestRatio){
+                bestRatio = ratio;
+                bestWeapon = weapon;
+            }
+        }
+    }
+    return bestWeapon; 
+}
+
 vector<Item*> Player::getSpecialItems(){
     return special_items_inventory;
+}
+
+int Consumable::getTotalHealAmount(){
+    int totalHeal = 0;
+    for (auto vc: valueComponents) {
+        if (auto hc = dynamic_cast<Stat::HealthComponent*>(vc)){
+            totalHeal+= hc->getMaxVal();
+        }
+    }
+    return totalHeal;
 }
 
 void Entity::die(){};//!
@@ -596,8 +670,8 @@ void AmmoBox::apply(FireArm* weapon){
     delete this;
 }
 
-FireArm::FireArm(string argName, vector<DamageComponent> dcs, int argDMG, Human* argOwner, int ARGmax_ammo, int ARG_ammo)
-:Weapon(argName, dcs, argDMG, argOwner){max_ammo = ARGmax_ammo; ammo = ARG_ammo == -1 ? ARGmax_ammo : ARG_ammo;};
+FireArm::FireArm(string argName, vector<DamageComponent> dcs, vector<string> desc, int ARGmax_ammo, int ARG_ammo, Human* argOwner)
+:Weapon(argName, dcs, desc, argOwner){max_ammo = ARGmax_ammo; ammo = ARG_ammo == -1 ? ARGmax_ammo : ARG_ammo;};
 
 vector<string> Item::getDesc(){
     return description;
@@ -606,6 +680,17 @@ vector<string> Item::getDesc(){
 void Item::setDesc(vector<string> desc){
     description = desc;
 }
+
+int Consumable::getBenefit(){
+    int sum = 0;
+    for (auto vc: valueComponents){
+        sum += vc->getMaxVal();
+    }
+    for (auto dc: damageComponents){
+        sum += dc.getDmg();
+    }
+    return sum;
+};
 
 void Player::attackWithGun(Weapon* weapon, Entity* entity){
     entity->getAttacked(weapon);
@@ -648,12 +733,8 @@ int Entity::calculateDmgWpn(Weapon* weapon, double mult){
     return sum;
 }
 
-void HumanEnemy::attack(Player* player){
-    player->getAttacked(item_at_hand);
-}
 
-
-void Zombie::attack(Player* player){
+void Zombie::zombieAttack(Player* player){
     player->takeDamage(dmg);
 }
 
@@ -678,10 +759,6 @@ string DamageComponent::getTypeStr(){
         case TYPE::peanut_butter:
         return "peanut";
     }
-}
-
-void Player::attack(Entity* entity){
-    entity->getAttacked(item_at_hand);
 }
 
 int Player::CombatMenuPrompt(vector<string> combatPrompt){
@@ -710,19 +787,6 @@ void Entity::dealDamage(int amount, Entity* entity){
 void Entity::takeIntDamage(int amount){
     hp = max(hp - amount, 0);
 }
-//TBITBITBITBIBT(?)
-void Human::use(Item* item){
-
-}
-
-void Human::useFireArm(FireArm* weapon, Entity* entity){
-    
-}
-void Human::useMelee(Melee* weapon, Entity* entity){
-
-};
-
-
 
 void Human::removeFromInv(Item* item){
     //remove pointer from inv, call delete for item.
@@ -790,8 +854,8 @@ string Item::getType(){
     return "Item";
 }
 
-Weapon::Weapon(string argName, vector<DamageComponent> argMod, int argDMG, Human* argOwner)
-    :Item(argName), dcvector(argMod), basedmg(argDMG){owner = argOwner;};
+Weapon::Weapon(string argName, vector<DamageComponent> argMod, vector<string> desc, Human* argOwner)
+    :Item(argName), dcvector(argMod){owner = argOwner; description = desc;};
 
 //tbi
 void Weapon::attack(Entity*){};
@@ -844,13 +908,7 @@ void Consumable::apply(Entity* entity) {
     }
 }
 
-Entity::Entity() : name(""), age(0), gender(""), lvl(1), hp(100), max_hp(100), dmg(10), sta(100), max_sta(100) {}
-
-// Entity::Entity(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, int argSTA, string strwith, string strweak)
-// : name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), max_hp(argHP), dmg(argDMG), sta(argSTA), max_sta(argSTA) {
-//     withstands = strwith;
-//     weaknesses = strweak;
-// }
+Entity::Entity() : name(""), age(0), gender(""), lvl(1), hp(100), max_hp(100), dmg(10) {}
 
 string Entity::getType() {
     return "Entity";
@@ -864,16 +922,9 @@ int Entity::getHp() {
     return hp;
 }
 
-int Entity::getSta() {
-    return sta;
-}
 
 int Entity::getHpMax() {
     return max_hp;
-}
-
-int Entity::getStaMax() {
-    return max_sta;
 }
 
 int Entity::getLVL() {
@@ -888,17 +939,10 @@ int Entity::healAmount(int amount){
     return min(hp + amount, max_hp) - hp;
 }
 
-int Entity::increaseStaminaAmount(int amount){
-    return min(hp + amount, max_hp) - hp;
-}
-
 void Entity::heal(int amount) {
     hp = min(max_hp, hp + amount);
 }
 
-void Entity::increaseStamina(int amount) {
-    sta = min(max_sta, sta + amount);
-}
 
 int Entity::calculateDmg(DamageComponent dmgcmp, double mult) { //should take damage component in actually
     if (weaknesses.find(dmgcmp.getTypeStr()) != string::npos){
@@ -919,23 +963,20 @@ int Entity::hpFullPercent() {
     return (hp * 100) / max_hp;
 }
 
-int Entity::staminaFullPercent() {
-    if (max_sta < 1) return -1;
-    return (sta * 100) / max_sta;
-}
-
 void Entity::consumeComponent(ValuedComponent* vc) {
     string type = vc->getType();
     if (type == "HealthComponent"){
         this->heal(vc->getMaxVal());
     }
     else if (type == "StaminaComponent"){
-        this->increaseStamina(vc->getMaxVal());
+        if (auto a = dynamic_cast<Human*>(this)){
+            a->addCombatTokens(vc->getMaxVal());
+        }
     }
 }
 
-Human::Human(string argName, int argAge, string argGender, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
-    : Entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA), item_at_hand(argItemAtHandPTR), inventory(argInv) {}
+Human::Human(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv, vector<string> argPrompts, string withstandstr, string weaknessstr)
+    :Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstandstr, weaknessstr, argPrompts), inventory(argInv){}
 
 string Human::getType() {
     return "Human";
@@ -962,8 +1003,8 @@ vector<Consumable*> Human::getConsumablesInv(){
 
 
 
-Player::Player(string argName, int argAge, string argGender, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
-    : Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argSTA) {}
+Player::Player(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv, string withstr, string weakstr)
+:Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, {}, withstr, weakstr){inventory = argInv;}
 
 string Player::getType() {
     return "Player";
@@ -975,8 +1016,8 @@ string Enemy::getType() {
 
 
 
-HumanEnemy::HumanEnemy(string argName, int argAge, string argGender, vector<string> stateprs, vector<Item*> argInv, Weapon* argItemAtHandPTR, int argLVL, int argHP, int argDMG, int argSTA)
-: Human(argName, argAge, argGender, argInv, argItemAtHandPTR, argLVL, argHP, argDMG, argSTA){state_prompts = stateprs;}
+HumanEnemy::HumanEnemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item*> argInv, vector<string> randomprompts, vector<string> stateprs, string withstr, string weakstr)
+:Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, randomprompts, withstr, weakstr){state_prompts = stateprs;}
 
 string HumanEnemy::getType() {
     return "HumanEnemy";
@@ -995,33 +1036,16 @@ int HumanEnemy::usePercentConsumable(Consumable* cons){
     }
     return sum/vcs.size();
 }
+
 int Human::effectiveValue(ValuedComponent* vcptr){
     if (auto ptr = dynamic_cast<Stat::HealthComponent*>(vcptr)){
         return min(vcptr->getMaxVal() + hp, max_hp);
     }
     else if (auto ptr = dynamic_cast<Stat::StaminaComponent*>(vcptr)){
-        return min(vcptr->getMaxVal() + sta, max_sta);
-    }
-}
-//tbi? what even is this for?
-void HumanEnemy::updateInventory() {
-    for (auto& item : inventory) {
-        if (item->getType() == "Consumable") {
-            Consumable* conptr = dynamic_cast<Consumable*>(item);
-            if (conptr) {
-                for (ValuedComponent* vc : conptr->getValueComponents()) {
-                    //?
-                }
-            }
-        }
+        return min(vcptr->getMaxVal() + combat_tokens, max_combat_tokens);
     }
 }
 
 int DamageComponent::simulateDamage(Entity* entity) {
     return entity->calculateDmg(*this);
-}
-//tbi?
-int DamageComponent::deal(Entity* entity) {
-    // Implementation
-    return 0; // Placeholder return
 }
