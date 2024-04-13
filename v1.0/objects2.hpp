@@ -12,6 +12,7 @@ using namespace std;
 
 const int SP_CHAR_DELAY_DEFAULT = 30;
 const int SP_PAR_DELAY_DEFAULT = 800;
+const bool NOCLS = false;
 
 class DamageComponent;
 class Entity;
@@ -34,10 +35,6 @@ int globalluck=0;
 5: increases any weapon's max ammo by 1.
 6: one that reduces luck but adds to your strength. for melee weapon build.
 */
-
-// map<int, vector<string>> relicDescriptions{
-
-// };
 
 vector<string> relicDescriptions
 {
@@ -187,6 +184,7 @@ namespace utils
     }
     void cls()
     {
+        if (NOCLS) return;
         system("cls");
     }
     void cll()
@@ -1367,7 +1365,7 @@ vector<Consumable *> Human::getConsumablesInv()
 }
 
 Player::Player(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv, string withstr, string weakstr)
-    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, {}, withstr, weakstr) { inventory = argInv; bname = argName;}
+    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, {}, withstr, weakstr) { inventory = argInv; bname = argName; hp = argHP;}
 
 string Player::getType()
 {

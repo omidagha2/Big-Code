@@ -21,7 +21,7 @@ public:
     }
 };//there's an icecream store that sells as many icecreams as you want.
 
-namespace Enemies{
+namespace Enemies{//!couldn't figure out why these get created with default constructors, like why all have 100 hp and such.
     Enemy* gethusk(int lvl, int luck, string weaponname = "weapon"){
         string str = "you take your trusty " + weaponname + ", and get ready for a(n easy) fight!";
         return new Zombie("Common Husk", 12, roll(2) ? "male" : "female", lvl, (5*lvl) + 3 * roll(luck), 3 + lvl, "", "fire", {"the zombie Rooaarrrs!!!", " but not nearly loud enough to scare a man like you.", str,"~"});

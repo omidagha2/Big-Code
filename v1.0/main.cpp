@@ -3,18 +3,20 @@
 #include "multi.hpp"
 using namespace std;
 using namespace utils;
-// different hat everytime
-// some dev constants to make presentation easier:
+
+
+const int PART = -1;
+const int UNLOCK = -1;
 int main(){
-    // MultiplayerCombat();
-    //kazem kare peanut ending
 
     srand(time(0));
     static int beatengame;
-    if (beatengame > 10 || beatengame < 0) beatengame = 0;
+    if (beatengame > 100 || beatengame < 0) beatengame = 0;
+    bool multi_unlocked = beatengame > 0;
+        if (UNLOCK != -1) multi_unlocked = true;
     while (true){
         int balance = 0;
-        if (beatengame == 0){
+        if (multi_unlocked){
             singleplayer: 
             Player p1 = Player("You", 12, "male", 1, 40, 1, {Items::getAllPossibleItems()[0]}, "", "");
             p1.setMelee(dynamic_cast<Weapon*>(Items::getAllPossibleItems()[8]));
@@ -28,7 +30,7 @@ int main(){
                         n = roll(3) + roll(3);
                     }
                 }
-                n = 2;
+                if (PART != -1) n = PART;
                 if (n == 0){
                     //zombie, normal or jugger or ghosty
                     Enemy* enemy;
@@ -69,6 +71,7 @@ int main(){
                     }
                 }
                 else{
+                    cls();
                     vector<Item*> stock = Items::getAllPossibleItems();
                     while (stock.size() > 7){
                         stock.erase(stock.begin() + (rand() % stock.size()));
@@ -76,7 +79,7 @@ int main(){
                     string str = "moments later, a pair of glowing ";
                     str.append((utils::roll(100) ? "" : "eye"));
                     str.append( "balls emerge from the dark. You can't help but stare and fret. At this point, running away would only make it angrier. Whatever it is ");
-                    while (p1.getInv().size() < 5){
+                    while (p1.getInv().size() < 5 && balance > 49){
                         vector<string> names = view::getNames(stock);
                         names.push_back("exit");
                         vector<vector<string>> descs1 = view::getvv(stock);
@@ -86,8 +89,9 @@ int main(){
                         descs2.push_back({"Business Dawg has no concept of money. He only seems to like the shape of the number '50' on the dollar bills. "});
                         descs3.push_back({"Business Dawg is seen in many places running a store, strangely with a different hat each time. Although he insists he is not and hasn't heard of those other Dawgs."});
                         vector<vector<string>> descs = roll(3) ? descs1 : roll(2) ? descs2 : descs1;
-                        int choice = promptUser(names, {"You come across a dark alleyway, like many others you've seen in your lifetime.","Or so it seemed at first... ", str, "As you stay still, waiting for your inevitable death, You see a hat come into the light...", "\"~~hElLo ThEre~~! Welcome to Business Dawg's accord!\"", "What can BusinessDawg get you today? "}, descs);
+                        int choice = promptUser(names, {"You come across a dark alleyway, like many others you've seen in your lifetime.","Or so it seemed at first... ", str, "As you stay still, waiting for your inevitable death, You see a hat come into the light...", "\"~~hElLo ThEre~~! Welcome to Business Dawg's accord!\"", "What can BusinessDawg get you today? ", "Balance: " + to_string(balance)}, descs);
                         if (choice == names.size()) break;
+                        balance -= 50;
                         Item* a = stock[choice];
                         if (auto b = dynamic_cast<Weapon*>(a)){
                             if (dynamic_cast<Melee*>(b)) p1.setMelee(b);
