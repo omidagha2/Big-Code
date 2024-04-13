@@ -12,7 +12,7 @@ enum class ZOmbieClasses{
     Juggernaut,
     Knight,
     Intelligent,
-    Theif
+    Thief
     //maybe some more classes
 };
 
@@ -21,6 +21,37 @@ enum class Behavior{
     Defensive,
     // some more behaviors TBD
 };
+
+
+string BehaviorToString(Behavior pattern){
+
+    switch (pattern){
+        
+        case(Behavior::Aggressive):
+            return "Aggressive";
+        case(Behavior::Defensive):
+            return "Defensive";
+        default:
+            return "Uknown";
+    }
+}
+
+string ZombieClassToString(ZOmbieClasses cls){
+
+    switch (cls){
+        
+        case(ZOmbieClasses::Intelligent):
+            return "Intelligent";
+        case(ZOmbieClasses::Juggernaut):
+            return "Juggernaut";
+        case(ZOmbieClasses::Knight):
+            return "Knight";
+        case(ZOmbieClasses::Thief):
+            return "Thief";
+        default:
+            return "Unknown";
+    }
+}
 
 class Entity{
 
@@ -71,7 +102,6 @@ public:
         return lvl;
     }
 
-
 };
 
 class Player : public Entity{
@@ -108,6 +138,7 @@ public:
 
         // some code and story tellings
     }
+    
 
 
     int getDamage() const {
@@ -122,6 +153,7 @@ public:
     int getArmor() const {
         return Armor;
     }
+
     Behavior getBehavior() const {
         return Pattern;
     }
@@ -135,6 +167,7 @@ class Zombie : public Enemy{
 protected:
 
     ZOmbieClasses Cls;
+    
 
 public:
     
@@ -153,7 +186,15 @@ public:
         return Cls;
     }
 
+    int calcZdmg();
+    int calcZTakenDmg(int tkDmg); 
+    void updateDmg(){
+        int temp = getStamina();
 
+    } 
+    void updatehhp(int tkDmg){
+        hp -= tkDmg;
+    }
 };
 
 

@@ -115,7 +115,7 @@ int Zombie::calcZTakenDmg(int tkDmg){
     
     srand(time(nullptr));
     int randNum = rand() % 10;
-    if (getZombieCls() == ZOmbieClasses::Theif){
+    if (getZombieCls() == ZOmbieClasses::Thief){
     
         if (randNum < getStealth()){
             tkDmg *= 0.8; 
@@ -218,7 +218,7 @@ private:
             return ZOmbieClasses::Intelligent;
         }
         if (randNum == 3) {
-            cls = ZOmbieClasses::Theif;
+            cls = ZOmbieClasses::Thief;
         }
 
         return cls;
@@ -236,7 +236,7 @@ private:
         if (cls == ZOmbieClasses::Knight){
             skill = BossSkills::SummonHorse;
         }
-        if (cls == ZOmbieClasses::Theif){
+        if (cls == ZOmbieClasses::Thief){
             skill = BossSkills::Vanishing;
         }
         return skill;
@@ -270,7 +270,7 @@ private:
                     ZHP = PlayerHP - 5;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZHP = PlayerHP - 5;
                 }
@@ -306,7 +306,7 @@ private:
                     ZHP = PlayerHP + 20;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZHP = PlayerHP + 20;
                 }
@@ -345,7 +345,7 @@ private:
                     ZStm = PlayerStm * 0.9;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZStm = PlayerStm * 1.05;
                 }
@@ -380,7 +380,7 @@ private:
                     ZStm = PlayerStm * 1.25;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZStm = PlayerStm * 1.25;
                 }
@@ -419,7 +419,7 @@ private:
                     ZDmg = PlayerDmg;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZDmg = PlayerDmg * 0.85;
                 }
@@ -454,7 +454,7 @@ private:
                     ZDmg = PlayerDmg * 1.10;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     ZDmg = PlayerDmg * 1.10;
                 }
@@ -485,7 +485,7 @@ private:
                     Zstl = PlayerStl * 0.1;
                 }
             }
-            if (cls == ZOmbieClasses::Theif){            
+            if (cls == ZOmbieClasses::Thief){            
                 if (pattern == Behavior::Defensive){
                     Zstl = PlayerStl * 0.3;
                 }
