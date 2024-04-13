@@ -148,30 +148,38 @@ public:
 
 };
 
-class entity{
+ class entity{
 protected:
     string name;
     int age;
     string gender; 
     int lvl;
     int hp;
-    int dmg;
     int sta;
-    int coin;
 
 public:
-    entity() : name(""), age(0), gender(""), lvl(1), hp(100), dmg(10), sta(10), coin(0) {}
+    entity()=default;
+    entity() : name(""), age(0), gender(""), lvl(1), hp(100), sta(10){}
     virtual void attack(entity* x,weapon* weapon_at_hand)=0;
-    entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
-    :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), dmg(argDMG), sta(argSTA){}
+    entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argSTA=0)
+    :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), sta(argSTA){}
     string getName() const {return name;}
+    int getAge() const {return age;}
+    string getGender() const {return gender;}
     int getLvl() const {return lvl;}
-    int getDmg() const {return dmg;}
     int getSta() const {return sta;}
     int getHp() const {return hp;}
     void setHp(int newhp)
     {
         hp=newhp;
+    }
+    void updateHP(int damage){
+
+        hp -= damage;
+        if (hp < 0){
+
+            hp = 0;
+        }
     }
     
 };
@@ -180,13 +188,14 @@ class human: public entity{
 protected:
     weapon weapon_at_hand;
     item item_at_hand;
+    int coin;
     vector<vector<string>> inventory={{"weopons"},{"healer Items"},{"throwable Items"}};
     int skills[SKILLS_IMPLEMENTED];
 
 public: 
     human()=default;
-    human(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argDMG=0, int argSTA=0)
-    : entity(argName, argAge, argGender, argLVL, argHP, argDMG, argSTA),item_at_hand("",0,0,0,0,0) {
+    human(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argSTA=0,int argCoin=0)
+    : entity(argName, argAge, argGender, argLVL, argHP, argSTA),item_at_hand("",0,0,0,0,0) {
         
     }
     void attack(entity* x,weapon* weapon_at_hand) override{
@@ -211,7 +220,8 @@ public:
         
         return item_at_hand;
     }
-    
+    int getcoin() const {return coin;}
+
 };
 
 class characters: public human{
@@ -220,16 +230,16 @@ public:
    
     characters() {
         // Directly initialize the characters in the constructor
-        chars.emplace_back("Thalion", 20, "Male", 1, 100, 10, 10);
-        chars.emplace_back("Eirwyn", 25, "Male", 1, 110, 20, 20);
-        chars.emplace_back("Brondar", 20, "Male", 1, 120, 20, 30);
-        chars.emplace_back("Mirelle", 20, "Female", 1, 150, 45, 35);
-        chars.emplace_back("Kaelum", 20, "Male", 1, 200, 50, 50);
-        chars.emplace_back("Seraphina", 20, "Female", 1, 190, 60, 45); 
-        chars.emplace_back("Draxen", 20, "Male", 1, 105, 20, 25);
-        chars.emplace_back("Arianya", 20, "Female", 1, 130, 10, 35);
-        chars.emplace_back("Fenris", 20, "Male", 1, 300, 65, 40);
-        chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100, 100);
+        chars.emplace_back("Thalion", 20, "Male", 1, 100, 10,1000);
+        chars.emplace_back("Eirwyn", 25, "Male", 1, 110, 20,1000);
+        chars.emplace_back("Brondar", 20, "Male", 1, 120, 30,1000);
+        chars.emplace_back("Mirelle", 20, "Female", 1, 150, 35,1000);
+        chars.emplace_back("Kaelum", 20, "Male", 1, 200, 50,1000);
+        chars.emplace_back("Seraphina", 20, "Female", 1, 190, 45,1000); 
+        chars.emplace_back("Draxen", 20, "Male", 1, 105, 25,1000);
+        chars.emplace_back("Arianya", 20, "Female", 1, 130, 35,1000);
+        chars.emplace_back("Fenris", 20, "Male", 1, 300, 40,1000);
+        chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100,1000);
     }
     human* choice()
     {
@@ -251,7 +261,7 @@ public:
         for (int i = 0; i < chars.size(); i++)
         {
             cout << (i+1) << ". " << "Name: " << chars[i].getName() << endl << "Level: " << chars[i].getLvl() << endl;
-            cout << "Damage: " << chars[i].getDmg() << endl << "Stamina: " << chars[i].getSta() << endl;
+            cout << "Stamina: " << chars[i].getSta() << endl << "Coin: " << chars[i].getcoin() << endl;
         }
         
     }
@@ -259,6 +269,7 @@ public:
     void attack(entity* x,weapon* weapon_at_hand)override {
         int a=x->getHp()-weapon_at_hand->damage();
         x->setHp(a);
+        cout << "You have attacked " << x->getName() << " its health is now " << a << " lower.\n";
     }
 
     bool isDefeated() const {
@@ -273,17 +284,18 @@ class humanEnemies :public human {
     vector<human> enemy;
 public:
     humanEnemies() {
-        enemy.emplace_back("Stenchurion", 20, "Male", 1, 100, 5, 15);
-        enemy.emplace_back("Cannibelle", 20, "Female", 1, 100, 7, 10);
-        enemy.emplace_back("Magmalice", 20, "Male", 1, 200, 15, 10);
-        enemy.emplace_back("Salamarauder", 20, "Female", 1, 150, 10, 15);
-        enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 15, 10);
-        enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 20, 10);
+        enemy.emplace_back("Stenchurion", 20, "Male", 1, 100, 15);
+        enemy.emplace_back("Cannibelle", 20, "Female", 1, 100, 10);
+        enemy.emplace_back("Magmalice", 20, "Male", 1, 200, 10);
+        enemy.emplace_back("Salamarauder", 20, "Female", 1, 150, 15);
+        enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 10);
+        enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 10);
     }
    
     void attack(entity* x,weapon* weapon_at_hand)override {
         int a=x->getHp()-weapon_at_hand->damage();
         x->setHp(a);
+        cout << "enemy has attacked you, your health is now " << a << " lower.\n"; 
     }
 
     bool isDefeated() const {
@@ -361,72 +373,72 @@ string ZombieClassToString(ZOmbieClasses cls){
 
 
 
-class Entity{
+// class Entity{
 
-protected:
+// protected:
 
-    string name , Gender;
-    int age , hp , Sta , lvl;
+//     string name , Gender;
+//     int age , hp , Sta , lvl;
+
+// public:
+
+//     Entity() = default;
+//     Entity(string& name , int age , string& gender , int hp , int stamina , int level) : name(name) , age(age) , Gender(gender) , hp(hp) , Sta(stamina) , lvl(level) {} 
+//     Entity(int hp , int stamina , int level) : hp(hp) , Sta(stamina) , lvl(level) {} 
+
+//     virtual void Attack(Entity& target) = 0;
+
+//     bool isDefeated() const {
+
+//         return hp <= 0;
+//     }
+
+//     void updateHP(int damage){
+
+//         hp -= damage;
+//         if (hp < 0){
+
+//             hp = 0;
+//         }
+//     }
+
+
+//     string getName() const {
+//         return name;
+//     }
+//     int getAge() const {
+//         return age;
+//     }
+//     string getGender() const {
+//         return Gender;
+//     }
+//     int getHP() const {
+//         return hp;
+//     }
+//     int getStamina() const {
+//         return Sta;
+//     }
+//     int getLevel() const {
+//         return lvl;
+//     }
+
+
+// };
+
+class Player : public entity{
 
 public:
 
-    Entity() = default;
-    Entity(string& name , int age , string& gender , int hp , int stamina , int level) : name(name) , age(age) , Gender(gender) , hp(hp) , Sta(stamina) , lvl(level) {} 
-    Entity(int hp , int stamina , int level) : hp(hp) , Sta(stamina) , lvl(level) {} 
+    Player(string& name , int age , string& gender , int hp , int stamina , int level) : entity(name , age , gender , level , hp, stamina ){}
 
-    virtual void Attack(Entity& target) = 0;
-
-    bool isDefeated() const {
-
-        return hp <= 0;
-    }
-
-    void updateHP(int damage){
-
-        hp -= damage;
-        if (hp < 0){
-
-            hp = 0;
-        }
-    }
-
-
-    string getName() const {
-        return name;
-    }
-    int getAge() const {
-        return age;
-    }
-    string getGender() const {
-        return Gender;
-    }
-    int getHP() const {
-        return hp;
-    }
-    int getStamina() const {
-        return Sta;
-    }
-    int getLevel() const {
-        return lvl;
-    }
-
-
-};
-
-class Player : public Entity{
-
-public:
-
-    Player(string& name , int age , string& gender , int hp , int stamina , int level) : Entity(name , age , gender , hp , stamina , level){}
-
-    void Attack(Entity& target) override {
+    void attack(entity* target, weapon* w) override {
 
         // some code and story tellings
     }
 
 };
 
-class Enemy : public Entity{
+class Enemy : public entity{
 
 protected:
     
@@ -441,9 +453,9 @@ public:
 
     Enemy() = default;
     Enemy(string& name , int age , string gender , int hp , int stamina , int level ,Behavior pattern, int damage , int defense , int stealth , int armor) : 
-    Entity(name , age , gender , hp , stamina , level) , Pattern(pattern) , Damage(damage) , Defense(defense) , Stealth(stealth) , Armor(armor) {}
+    entity(name , age , gender , level, hp, sta) , Pattern(pattern) , Damage(damage) , Defense(defense) , Stealth(stealth) , Armor(armor) {}
 
-    void Attack(Entity& target) override {
+    void attack(entity* target,weapon* x) override {
 
         // some code and story tellings
     }
@@ -482,7 +494,7 @@ public:
     Zombie(string& name , int age , string& gender , int hp , int stamina , int level , Behavior pattern, int damage , int defense , int stealth , int armor , ZOmbieClasses cls) : 
     Enemy(name , age , gender , hp , stamina , level , pattern , damage , defense , stealth ,  armor) , Cls(cls) {}
 
-    void Attack(Entity& target) override {
+    void attack(entity* target, weapon* x) override {
 
         int damageTaken = getDamage();
         updateHP(damageTaken);
@@ -522,7 +534,7 @@ public:
     
     int calcBossDmg(int damg);
     int calcBossTakenDmg(int tkDmg);
-    void Attack(Entity& target);
+    void Attack(entity& target);
 
     void HealBoss(){
         hp = hp * 1.25;
@@ -574,7 +586,7 @@ int Zombie::calcZTakenDmg(int tkDmg){
     return tkDmg;
 }
 
-void ZombieBoss::Attack(Entity& target){
+void ZombieBoss::Attack(entity& target){
     
     if (getBossSkill() == BossSkills::FireRocks){
 
@@ -962,7 +974,7 @@ public:
 
 
 
-    static Zombie createZombie(const Entity& player , int RegOrBoss){
+    static Zombie createZombie(const entity& player , int RegOrBoss){
         
         srand(time(nullptr));
         string filename = "names.txt";
@@ -974,9 +986,9 @@ public:
         string name = getRandomName(ZombieName);
         int age = player.getAge() * 2;
         string gender = player.getGender();
-        int hp = generateHP(player.getHP() , pattern , cls , RegOrBoss);
-        int stamina = generateStamina(player.getStamina() , pattern , cls , RegOrBoss);
-        int level = player.getLevel();
+        int hp = generateHP(player.getHp() , pattern , cls , RegOrBoss);
+        int stamina = generateStamina(player.getSta() , pattern , cls , RegOrBoss);
+        int level = player.getLvl();
         int damage = generateDamage(10 , pattern , cls , RegOrBoss);
         int defense = 0.7;
         int stealth = generateStealth(0.4 , pattern , cls , RegOrBoss);
@@ -988,7 +1000,7 @@ public:
         
     }
 
-    static ZombieBoss createBossZombie(const Entity& player , int RegOrBoss){
+    static ZombieBoss createBossZombie(const entity& player , int RegOrBoss){
 
         srand(time(nullptr));
         string filename = "names.txt";
@@ -1000,9 +1012,9 @@ public:
             string name = getRandomName(ZombieName);
             int age = player.getAge() * 2;
             string gender = player.getGender();
-            int hp = generateHP(player.getHP() , pattern , cls , RegOrBoss);
-            int stamina = generateStamina(player.getStamina() , pattern , cls , RegOrBoss);
-            int level = player.getLevel();
+            int hp = generateHP(player.getHp() , pattern , cls , RegOrBoss);
+            int stamina = generateStamina(player.getSta() , pattern , cls , RegOrBoss);
+            int level = player.getLvl();
             int damage = generateDamage(10 , pattern , cls , RegOrBoss);
             int defense = 0.7;
             int stealth = generateStealth(0.4 , pattern , cls , RegOrBoss);
