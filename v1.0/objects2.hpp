@@ -25,7 +25,7 @@ class Human;
 class Player;
 vector<string> nextPrompts = {};
 bool relics[7] = {};
-int globalluck=0;
+int globalluck = 0;
 /*
 0: makes melee vision horrible, maybe broken glasses.
 1: increase luck by 2.
@@ -36,30 +36,27 @@ int globalluck=0;
 6: one that reduces luck but adds to your strength. for melee weapon build.
 */
 
-vector<string> relicDescriptions
-{
-"Spectacles of Misfortune:\n These spectacles were once worn by a nearsighted barbarian who mistook a dragon for a damsel. Wearing them may turn your vision into a blurry mess, making every foe look fearsomely fuzzy."
-,
-"Lucky Rabbit's Foot:\n Not your ordinary foot—this one's from a rabbit that survived five encounters with a fox, two forest fires, and a tax audit. Although, if the rabbit was so lucky, it's foot wouldn't be here.\n Carrying it boosts your luck by 2. "
-,
-"Sharpshooter's Monocle:\n Believed to have belonged to the legendary sniper but found under an ordinary tree.\n This monocle sharpens your aim, making guns far more accurate. Just don’t look into the sun."
-,
-"Pyro's Mood Ring:\n Changes colors with your fiery outbursts and cools down with your chill vibes. It increases fire damage (setting even the moodiest monsters ablaze) and decreases freeze damage (because cold hearts can't hurt you)."
-,
-"Bargaining Chicken:\n Trained by a famous chicken trainer to talk, This chick knows a very useful sentence she repeats each turn: \"Please, just one more day!\". And she fits in your pocket! \nAdding her to your arsenal gives you an extra move in your turn, because sometimes, all you need is one more roll to turn the tides."
-,
-"The Great Alchemist's Tape:\n Belonged to an eccentric alchemist who believed everything could hold \"just one more.\" Strap it on any weapon to increase it's max ammo by 1-although it's famous for it's other \"uses\""
-,
-"Boulder's Bracelet:\n Worn by a famous arm-wrestler who was terrible at gambling but great at brawling. This relic reduces your luck but grants the strength to arm-wrestle a bear—or at least swing a mean club (+1 damage)."
-};
+vector<string> relicDescriptions{
+    "Spectacles of Misfortune:\n These spectacles were once worn by a nearsighted barbarian who mistook a dragon for a damsel. Wearing them may turn your vision into a blurry mess, making every foe look fearsomely fuzzy.",
+    "Lucky Rabbit's Foot:\n Not your ordinary foot—this one's from a rabbit that survived five encounters with a fox, two forest fires, and a tax audit. Although, if the rabbit was so lucky, it's foot wouldn't be here.\n Carrying it boosts your luck by 2. ",
+    "Sharpshooter's Monocle:\n Believed to have belonged to the legendary sniper but found under an ordinary tree.\n This monocle sharpens your aim, making guns far more accurate. Just don’t look into the sun.",
+    "Pyro's Mood Ring:\n Changes colors with your fiery outbursts and cools down with your chill vibes. It increases fire damage (setting even the moodiest monsters ablaze) and decreases freeze damage (because cold hearts can't hurt you).",
+    "Bargaining Chicken:\n Trained by a famous chicken trainer to talk, This chick knows a very useful sentence she repeats each turn: \"Please, just one more day!\". And she fits in your pocket! \nAdding her to your arsenal gives you an extra move in your turn, because sometimes, all you need is one more roll to turn the tides.",
+    "The Great Alchemist's Tape:\n Belonged to an eccentric alchemist who believed everything could hold \"just one more.\" Strap it on any weapon to increase it's max ammo by 1-although it's famous for it's other \"uses\"",
+    "Boulder's Bracelet:\n Worn by a famous arm-wrestler who was terrible at gambling but great at brawling. This relic reduces your luck but grants the strength to arm-wrestle a bear—or at least swing a mean club (+1 damage)."};
 
+//utility functions
 namespace utils
 {
+
+    //has a one over (denom) chance to return true, scales with luck (has a chance of 1/(d-l*lm) to return true.)
     bool roll(int denom, int luck = 0, int luck_mult = 1)
-    { // has a chance of 1/(d-l*lm) to return true.
+    { 
         int a = denom - luck * luck_mult;
         return a <= 0 ? true : rand() % a == 0;
     }
+
+    //currently unused
     enum Color
     {
         ORANGE,
@@ -70,6 +67,7 @@ namespace utils
 
     };
 
+    //returns the strings in the nextPrompts global vector<string> variable and clears it.
     vector<string> popNextPrompts()
     {
         vector<string> temp = nextPrompts;
@@ -77,6 +75,7 @@ namespace utils
         return temp;
     }
 
+    //waits for a key press and returns it.
     char waitForInpt()
     {
         int i;
@@ -90,6 +89,7 @@ namespace utils
         }
     }
 
+    //slowlyy prints a bunch of strings. use @'s in your strings to skip char delay for chars in between, ~'s to skip whitespaces between sentences, ^'s to skip delay between sentences. use the backslash (\) button on keyboard to skip a sentence slowprinting.
     int slowPrintPrompts(vector<string> prompts, vector<int> input_vector = {}, char skip_key = '\\', double char_delay_ms = SP_CHAR_DELAY_DEFAULT, double sentence_delay_ms = SP_PAR_DELAY_DEFAULT, string sentence_sep = "\n", Color color = WHITE, int responsiveness = 20)
     {
         int p, chardel = char_delay_ms, sendel = sentence_delay_ms;
@@ -178,18 +178,27 @@ namespace utils
             }
         }
     }
+
+    // a simpler easy to call version of slowPrintPrompts for when there is just one sentence
     void slowPrint(string prompt, Color color = WHITE, double char_delay_ms = SP_CHAR_DELAY_DEFAULT)
     {
         slowPrintPrompts({prompt});
     }
+
+    //clears screen
     void cls()
     {
-        if (NOCLS) return;
+        if (NOCLS)
+            return;
         system("cls");
     }
+
+    //clears a line (iunimplemented)
     void cll()
     {
     }
+
+    //suitable for making menus. Slowly prints prepromt, then the choices, then for each choice a description below. you can move freely between choices
     int promptUser(vector<string> choices, vector<string> preprompt, vector<vector<string>> choice_descriptions = {}, bool prompt_first = false)
     {
 
@@ -246,6 +255,7 @@ namespace utils
     }
 }
 
+
 class Item
 {
 protected:
@@ -277,11 +287,16 @@ public:
 class Weapon : public Item
 {
 protected:
+    //holds a bunch of DamageComponents allowing for mixed types of damage.
     vector<DamageComponent> dcvector;
 
 public:
     string getDamageDesc();
+
+    //returns a string showing stats for the weapon.  it's meant to be overwritten later.
     virtual string getinfo(){};
+
+    //tries to return how much damage an entity would take if it were to be attacked by this weapon
     virtual int estimateDamage(Entity *entity);
     virtual vector<DamageComponent> getDcVector();
     Weapon(string argName, vector<DamageComponent> dcs, vector<string> desc = {}, Human *argOwner = nullptr, int tu = 1);
@@ -289,6 +304,7 @@ public:
     virtual string getType();
 };
 
+//an object to refill ammo on a gun (currently unused in the game)
 class AmmoBox : public Item
 {
 public:
@@ -303,29 +319,38 @@ class FireArm : public Weapon
 public:
     int getAmmo() { return ammo; }
     int getMaxAmmo() { return max_ammo; }
+    //refills ammo a certain amount, or fully if no arguments are given.
     int refillAmmo(int amount = -1) { ammo = (amount == -1 ? max_ammo : min(max_ammo, ammo + amount)); }
+    //decrease ammo a certain amount.
     int decreaseAmmo(int amount = 1) { ammo = max(ammo - amount, 0); }
     FireArm(string argName, vector<DamageComponent> dcs, vector<string> desc, int ARGmax_ammo, int ARG_ammo, Human *argOwner = nullptr, int tu = 1);
-    string getinfo() override{
+    
+    //overriden get info function that displays damage, ammo, max ammo and token usage.
+    string getinfo() override
+    {
         string str = ("[Damage: ");
-        str += getDamageDesc() + " - Ammo: " + to_string(getAmmo()) + "/" + to_string(getMaxAmmo()) + " - Tokens: " + to_string(getTokenUse()) + "]" ;
-        return str;
-        }
-};
-
-class Melee : public Weapon
-{
-    // modifiers?
-    public:
-    Melee(string argName, vector<DamageComponent> dcs, vector<string> desc = {}, Human *argOwner = nullptr, int tu = 1)
-        :Weapon(argName, dcs, desc, argOwner, tu){};
-    string getinfo() override{
-        string str = ("[Damage: ");
-        str += getDamageDesc() + " - Tokens: " + to_string(getTokenUse()) + "]" ;
+        str += getDamageDesc() + " - Ammo: " + to_string(getAmmo()) + "/" + to_string(getMaxAmmo()) + " - Tokens: " + to_string(getTokenUse()) + "]";
         return str;
     }
 };
 
+class Melee : public Weapon
+{
+    //// modifiers here?
+public:
+    Melee(string argName, vector<DamageComponent> dcs, vector<string> desc = {}, Human *argOwner = nullptr, int tu = 1)
+        : Weapon(argName, dcs, desc, argOwner, tu){};
+
+    //overriden getinfo functoin that shows (returns a string of) damage and tokens
+    string getinfo() override
+    {
+        string str = ("[Damage: ");
+        str += getDamageDesc() + " - Tokens: " + to_string(getTokenUse()) + "]";
+        return str;
+    }
+};
+
+//a class for any kind of component that has a value aspect and needs to know how full that value is (changed premises a bit)
 class ValuedComponent
 {
 protected:
@@ -336,6 +361,7 @@ public:
     virtual int getMaxVal();
 };
 
+//implemented valuedcomponents
 struct Stat
 {
     class HealthComponent : public ValuedComponent
@@ -353,6 +379,7 @@ struct Stat
     };
 };
 
+
 class Consumable : public Item
 {
     vector<ValuedComponent *> valueComponents;
@@ -362,17 +389,22 @@ public:
     Consumable(string name, vector<ValuedComponent *> VCs, vector<DamageComponent> DCs = {}, vector<string> desc = {}, Human *owner = nullptr, int tokenUses = 1);
     string getType();
     vector<ValuedComponent *> &getValueComponents();
-    int getTotalHealAmount();
-    // switch out the inheritance just for types and the other thing
-
     void addVC(ValuedComponent *vc);
+
+    //returns how much it would heal
+    int getTotalHealAmount();
+
+    // applies the consumable onto an entity. heals them for it's healing components and famages them for it's damaging components. Doesn't remove the consumable object.
     void apply(Entity *entity);
+
+    //function to make evaluation for fsm easier
     int getBenefit(bool valuematters = true, bool damagematters = true);
 };
 
+//a class for any collection of items.
 class ItemBunch
 {
-    vector<Item*> items;
+    vector<Item *> items;
 
 public:
     ItemBunch(vector<Item *> argitems = {})
@@ -398,6 +430,7 @@ public:
         }
     }
 
+    // prompts the player and returns the item chosen. 
     Item *displayAndChooseItem()
     {
         if (items.empty())
@@ -420,7 +453,8 @@ public:
         return items[choice - 1];
     }
 
-    vector<Item*> getVector(){
+    vector<Item *> getVector()
+    {
         return items;
     }
 };
@@ -445,22 +479,43 @@ protected:
 
 public:
     virtual bool isAlive();
+
+    //these two are the same, but i've used different versions in different places and an afraid to remove one
     void heal(int amount);
     int healAmount(int amount);
+
     virtual string getname() { return name; }
+
+    //returns an int between 0 and 100.
     virtual int hpFullPercent();
+
+    //returns how much damage would be dealt by a damage component, takes a multiplier or a list (vector of size 5) of them for each damage type.
     virtual int calculateDmg(DamageComponent, double = 1, vector<double> mults = {});
+
+    //deals damage to an entity. (unused currently)
     virtual void dealDamage(int amount, Entity *entity);
+
+    //applies a cvaluedomponent onto the entity.
     virtual void consumeComponent(ValuedComponent *vc);
+
+    //applies a damage component to the entity. 
     virtual void consumeDC(DamageComponent dc);
+
+    //returns how much damage would be taken by a weapon, which is the sum of all damages from the damage components. takes weaknesses and withstands into account. 
     virtual int calculateDmgWpn(Weapon *weapon, double mult = 1, vector<double> mults = {});
+
+    //gets attacked by a weapon
     virtual int getAttacked(Weapon *weapon, double multiplier = 1);
+
+    //currently unused die function
     virtual void die();
     virtual void addweakness(string str) { weaknesses.append(str); }
     virtual void addwithstand(string str) { withstands.append(str); }
-    vector<double> getmults(){return mults;}
+    vector<double> getmults() { return mults; }
     void setonfire() { onfire = true; }
     void freeze() { frozen = true; }
+
+    //sets freezing and onfire fields false if both are true.
     void freezeNFire()
     {
         if (onfire && frozen)
@@ -470,12 +525,16 @@ public:
             frozen = false;
         }
     }
-    string getinfo(){
+
+    //returns a string containing info on level, hpp, damage.
+    string getinfo()
+    {
         return ("[LVL: " + to_string(lvl) + " - HP: " + to_string(hp) + " - DMG: " + to_string(dmg) + "]");
     }
     bool isfrozen() { return frozen; }
     bool isBurning() { return onfire; }
 
+    //randomly returns a prompt from the entity's prompts
     string getRandomPrompt()
     {
         if (prompts.empty())
@@ -491,14 +550,19 @@ public:
     int getHpMax();
     int getLVL();
     int getDMG();
+
+    //simple function for when you just need to take some int damage
     void takeIntDamage(int);
     void setluck(int l) { luck = l; }
     int getluck() { return luck; }
 };
 
+
 class Human : virtual public Entity
 {
 protected:
+
+    //getname() function wouldn't work so i make a backup name because i don't understand virtual inheritence
     string bname;
     Weapon *melee_weapon;
     Weapon *firearm_weapon;
@@ -507,15 +571,27 @@ protected:
     int combat_tokens;
 
 public:
+
+    //calls entity's take damage from weapon function
     virtual void attackWith(Weapon *weapon, Entity *entity);
+
+    //consumes a consumable, calls delete on the consumable pointer
     virtual void useConsumable(Consumable *);
+
+    //adds an item to the inventory. also makes the item's owner this entity.
     virtual void takeInInv(Item *item);
+
+    //consumes an item if it's a consumable
     virtual void consumeConsumable(Item *consumable);
+
+    //removes an item from the inventory and calls delete on it.
     virtual void removeFromInv(Item *item);
     virtual void addCombatTokens(int amount)
     {
         combat_tokens = min(amount + combat_tokens, max_combat_tokens);
     }
+
+    //returns how much value of the valued component would actually be used
     int effectiveValue(ValuedComponent *vcptr);
     vector<string> getItemNames();
     Human(){};
@@ -523,82 +599,123 @@ public:
     Human(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv = {}, vector<string> argPrompts = {}, string withstandstr = "", string weaknessstr = "", vector<double> argmults = {});
     virtual string getType();
     vector<Item *> getInv();
+
+    //returns a vector of all the consumables in the inventory (which is the only type of thing that can be in there currently, so this is also useless)
     vector<Consumable *> getConsumablesInv();
+
+
     int getCombatTokens() { return combat_tokens; }
     int getMaxCombatTokens() { return max_combat_tokens; }
     void increaseMaxCombatTokens(int amount) { max_combat_tokens += amount; }
     void setCombatTokens(int amount) { combat_tokens = min(max_combat_tokens, amount); }
+
+    //a fancier name for decrease tokens
     void usetokens(int amount) { setCombatTokens(max(0, combat_tokens - amount)); }
+    
     void setfirearm(Weapon *fa);
     Weapon *getFireArm();
     void setMelee(Weapon *fa);
     Weapon *getMelee();
-    virtual string getname() override {
+    virtual string getname() override
+    {
         return name;
     }
 };
 
 class Player : public Human
 {
-    vector<Item *> special_items_inventory; // won't fill up.
-    int balance;
+    vector<Item *> special_items_inventory; // won't fill up (has no cap).
+    int balance;//unused as I forgot about it
+
 public:
-    bool tryPurchase(int amount){
-        if (amount > balance){
+
+    //takes in amount. returns true and decreases balance if it can afford that amount, otherwise returns false.
+    bool tryPurchase(int amount)
+    {
+        if (amount > balance)
+        {
             return false;
         }
-        else{
-            balance -= amount; 
+        else
+        {
+            balance -= amount;
             return true;
         }
     }
     Player(){};
+
+    //prompts the user with an attack interface, returns an integer based on how good they did. you can change the crosshair,
+    // make it so it doesn't show the picture with the characters, or make it so it returns score based on how far it went only.
+    // you can probably change the length of the graphical interface too but that might be bugged.
     int atkBarGun(int offset, int length = 11, bool rawscore = false, bool showting = true, char crosshair = '^');
+
+    //similar thing as atkbargun (infact calls it) but tailored for a melee weapon interface
     int atkBarMelee(int offset);
+
+    //unused
     int CombatMenuPrompt(vector<string>);
+    //unused
     void inventoryPrompt(); // throwable, consumable, ammo_box, needle, ...
+    //unused
     void meleePrompt();
+    //unused
     void specialItemsPrompt();
+    //unused
     void shootPrompt();
+    //unused
     void attackWithMelee(Weapon *weapon, Entity *entity);
+    //unused
     void attackWithGun(Weapon *weapon, Entity *entity);
+
+
     void addSpecialItem(Item *item);
     vector<Item *> getSpecialItems();
     void removeSpecialItem(Item *);
+
+    //updates the variables and functionalities associated with having certain relics unlocked (currently only tokens are implemented)
     void updateRelics();
+
+    //clears nextPrompts global variable
     void resetNextPrompts() { nextPrompts = {}; }
     void addtoNextPrompts(string np) { nextPrompts.push_back(np); }
-    void setlvl(int i){lvl = i;}
+    void setlvl(int i) { lvl = i; }
     vector<string> getNextPrompts() { return nextPrompts; }
-    
-    virtual ~Player(){};
-string getname() override {
-        return bname;}
+
+    virtual ~Player(){};                                                                                                                                                                    //there's still so much more story i want to implement
+    string getname() override
+    {
+        return bname;
+    }
     Player(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv = {}, string withstr = "", string weakstr = "");
     virtual string getType();
 };
 
+//unused
 class Shop
 {
     ItemBunch itemsinstock;
+
 public:
-    
 };
 
 class Enemy : virtual public Entity
 {
 protected:
-    string bname;
+    string bname; //same thing as before
+
 public:
     Enemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, string withstr, string weakstr, vector<string> argPrompts = {}, vector<double> argmults = {})
-        : Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts, argmults) {bname = argName;}
+        : Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts, argmults) { bname = argName; }
     Enemy(){};
 
     virtual string getType() override;
-    virtual string getname() override{
+    virtual string getname() override
+    {
         return bname;
     }
 };
+
+//a class for all things that can be simplified to a damage amount and a amage type
 class DamageComponent
 {
 public:
@@ -616,8 +733,13 @@ private:
     int damage;
 
 public:
+    //returns how much damage an entity would take, taking into account weaknesses and withstands. 
     virtual int simulateDamage(Entity *entity);
+
+    //returns the string version of dmgType
     string getTypeStr();
+
+    //returns an int version of dmgType representing one of the (currently 5) implemented
     int getTypeInt()
     {
         return int(dmgType);
@@ -626,17 +748,19 @@ public:
     DamageComponent(int dmg, TYPE type = TYPE::regular);
     DamageComponent(){};
 };
+
 class Zombie : public Enemy
 {
-    string cname;
+    string cname;//bname wouldn't work, soo i mad another don't judge pls it works
     DamageComponent dmgcmp;
 
 public:
     Zombie(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, string withstr, string weakstr, vector<string> argPrompts = {}, vector<double> argmults = {})
-        : Enemy(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts, argmults) {cname = argName;}
+        : Enemy(argName, argAge, argGender, argLVL, argHP, argDMG, withstr, weakstr, argPrompts, argmults) { cname = argName; }
 
     void zombieAttack(Player *player);
-    string getname(){
+    string getname()
+    {
         return cname;
     }
 };
@@ -646,6 +770,8 @@ public:
 class HumanEnemy : public Human, public Enemy
 {
     friend class Combat;
+
+    //states for the fsm logic to move through
     enum State
     {
         CalcBestWeapon,
@@ -656,75 +782,119 @@ class HumanEnemy : public Human, public Enemy
         AreThereTokens,
         Attack
     };
-    vector<string> state_prompts;
+    vector<string> state_prompts; //holds prompts for each state
     State current_state;
     string dialogue;
-    string cname;
+    string cname; //yup
     Player *target;
+
+    //holds best weapon calculated at the CalcBestWepaon state
     Weapon *bw;
+
+    //holds the amount of tokens to reserve for the bw calculated at the CalcBestWeapon state
     int tokens_after_best_weapon;
+
+    //holds the best consumable calculated at one of the second states
     Consumable *bestConsumable;
 
 public:
     void setCurrentState(State state) { current_state = state; }
     State getCurrentState() { return current_state; }
-    string getStateStr(){
-        switch (current_state){
-            case 0: return "CalculateBestWeapon";
-            case 1: return "Entry";
-            case 2: return "DangerouslyLowHp";
-            case 3: return "KindaLowHp";
-            case 4: return "HpIsFine";
-            case 5: return "AreThereTokens";
-            case 6: return "Attack";
-        }
-    }
-    string getStateDesc(){
-        switch (current_state){
-            case 0: return "Calculate the best weapon based on it's damage/token ratio, and reserves tokens for it. ";
-            case 1: return "Determine what it should do next based on how much hp it has. ";
-            case 2: return "Not care about reserving tokens and uses the best healing item it has. ";
-            case 3: return "Use a healing item with the best value that will also leave enough tokens for the attack. ";
-            case 4: return "Use a throwable or a damage inducing consumable with the best value that also leaves enough tokens for the attack. ";
-            case 5: return "Determine what to do next based on how many extra tokens they have. ";
-            case 6: return "Attacks and ends turn. ";
+
+    //return a string versoin of current state
+    string getStateStr()
+    {
+        switch (current_state)
+        {
+        case 0:
+            return "CalculateBestWeapon";
+        case 1:
+            return "Entry";
+        case 2:
+            return "DangerouslyLowHp";
+        case 3:
+            return "KindaLowHp";
+        case 4:
+            return "HpIsFine";
+        case 5:
+            return "AreThereTokens";
+        case 6:
+            return "Attack";
         }
     }
 
+    //returns a description based on the current state
+    string getStateDesc()
+    {
+        switch (current_state)
+        {
+        case 0:
+            return "Calculate the best weapon based on it's damage/token ratio, and reserves tokens for it. ";
+        case 1:
+            return "Determine what it should do next based on how much hp it has. ";
+        case 2:
+            return "Not care about reserving tokens and uses the best healing item it has. ";
+        case 3:
+            return "Use a healing item with the best value that will also leave enough tokens for the attack. ";
+        case 4:
+            return "Use a throwable or a damage inducing consumable with the best value that also leaves enough tokens for the attack. ";
+        case 5:
+            return "Determine what to do next based on how many extra tokens they have. ";
+        case 6:
+            return "Attacks and ends turn. ";
+        }
+    }
+
+
     vector<string> getStatePrompts() { return state_prompts; }
     void setStatePrompts(vector<string> spv) { state_prompts = spv; }
+
+    //returns how much of the caluedcomponent would be effectively used in percents
     int usePercentVC(ValuedComponent *vcptr);
+
+    //returns how much of the consumable would be effectively used in percents
     int usePercentConsumable(Consumable *cons);
-    Weapon* getbw();
+
+    Weapon *getbw();
+
+    //tries to find the best weapon for a speific target
     Weapon *findBestWeapon(Entity *target);
+
     HumanEnemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv = {}, vector<string> randomprompts = {}, vector<string> stateprs = {}, string withstr = "", string weakstr = "", vector<double> argmults = {});
     virtual string getType() override;
     int gettabw() { return tokens_after_best_weapon; }
     void settabw(int amount) { tokens_after_best_weapon = amount; }
+
+    //called from a second state to find the most suitable consumable. can be in 3 modes: 
+    //1 means valued components matter only, 2 means the same but with damagecomponents, 3 means they both matter.
     Consumable *findBestConsumableForUtilization(int mode);
+
+    //called at the calculatebestweapon state
     Weapon *calculateBestWeapon(Player *target);
     int hpFullPercent();
-    string getname() override{return cname;}
+    string getname() override { return cname; }
 };
-    
-void Entity::consumeDC(DamageComponent dc){
+
+void Entity::consumeDC(DamageComponent dc)
+{
     takeIntDamage(calculateDmg(dc, 1, mults));
     nextPrompts.push_back(getname() + " took " + to_string(calculateDmg(dc, 1, mults)) + " " + dc.getTypeStr() + " damage and is now on " + to_string(getHp()) + " health.");
 }
 
 Consumable *HumanEnemy::findBestConsumableForUtilization(int mode)
-{//0: healing value, 1: least wasteful healing, 2: highest damage
+{ // 0: healing value, 1: least wasteful healing, 2: highest damage
     int i, j;
-    switch(mode){
-        case 1:
+    switch (mode)
+    {
+    case 1:
         i = 1, j = 0;
         break;
-        case 2:
+    case 2:
         i = 1, j = 0;
         break;
-        case 3:
+    case 3:
         i = 0;
-        j = 1; 
+        j = 1;
         break;
     }
     Consumable *bestConsumable = nullptr;
@@ -797,7 +967,8 @@ int Player::atkBarGun(int offset, int length, bool rawscore, bool showthing, cha
     }
 }
 
-Weapon* HumanEnemy::getbw(){
+Weapon *HumanEnemy::getbw()
+{
     return bw;
 };
 
@@ -806,9 +977,11 @@ int Player::atkBarMelee(int offset)
     int score = 0;
     int way = 1;
     if (!relics[0])
-        cout << endl << "~~~~" << char(176) << char(176) << char(176) << char(177) << char(177) << char(177) << char(178) << endl;
+        cout << endl
+             << "~~~~" << char(176) << char(176) << char(176) << char(177) << char(177) << char(177) << char(178) << endl;
     else
-        cout << endl << '.' << ',' << '-' << char(169) << '~' << char(174) << char(22) << char(31) << char(254) << char(219) << char(178) << endl;
+        cout << endl
+             << '.' << ',' << '-' << char(169) << '~' << char(174) << char(22) << char(31) << char(254) << char(219) << char(178) << endl;
     return atkBarGun(offset, 11, true, false, '*');
 }
 DamageComponent::DamageComponent(int dmg, TYPE type)
@@ -817,7 +990,8 @@ DamageComponent::DamageComponent(int dmg, TYPE type)
     dmgType = type;
 };
 
-int HumanEnemy::hpFullPercent(){
+int HumanEnemy::hpFullPercent()
+{
     return hp * 100 / max_hp;
 };
 
@@ -835,7 +1009,6 @@ void Item::removeFromInv(Human *human)
     human->removeFromInv(this);
     delete this;
 }
-
 
 void Player::addSpecialItem(Item *item)
 {
@@ -860,10 +1033,10 @@ Weapon *HumanEnemy::calculateBestWeapon(Player *target)
     double bestRatio = 0;
 
     // for (Item *item : inventory) //#old implementation, for when weapons would be in inventory.
-    vector<Item*> items={getMelee(), getFireArm()};
+    vector<Item *> items = {getMelee(), getFireArm()};
     for (Item *item : items)
     {
-        Weapon *weapon = dynamic_cast<Weapon*>(item);
+        Weapon *weapon = dynamic_cast<Weapon *>(item);
         if (weapon)
         {
             int damage = weapon->estimateDamage(target);
@@ -929,9 +1102,10 @@ int Consumable::getTotalHealAmount()
     return totalHeal;
 }
 
-void Entity::die(){};                                     //!
-void Human::attackWith(Weapon *weapon, Entity *entity){
-    entity -> getAttacked(weapon);
+void Entity::die(){}; //!
+void Human::attackWith(Weapon *weapon, Entity *entity)
+{
+    entity->getAttacked(weapon);
 }; //!
 
 vector<string> Human::getItemNames()
@@ -959,9 +1133,11 @@ FireArm::FireArm(string argName, vector<DamageComponent> dcs, vector<string> des
     ammo = ARG_ammo == -1 ? ARGmax_ammo : ARG_ammo;
 };
 
-string Weapon::getDamageDesc(){
+string Weapon::getDamageDesc()
+{
     string str = "";
-    for (auto dc: dcvector){    
+    for (auto dc : dcvector)
+    {
         str += to_string(dc.getDmg()) + " " + dc.getTypeStr() + ", ";
     }
     str += "\b\b  ";
@@ -1149,7 +1325,7 @@ void Human::consumeConsumable(Item *consumable)
     }
     Consumable *consptr = dynamic_cast<Consumable *>(consumable);
     string isorare = (getname() == "You" ? "are" : "is");
-    nextPrompts.push_back(getname() + "  " + consptr->getname() + " and " +(isorare)+ " now on " + to_string(getHp()) + " Hp with " + to_string(getCombatTokens()) + " move(s) left.");
+    nextPrompts.push_back(getname() + "  " + consptr->getname() + " and " + (isorare) + " now on " + to_string(getHp()) + " Hp with " + to_string(getCombatTokens()) + " move(s) left.");
     consptr->apply(this);
     inventory.erase(find(inventory.begin(), inventory.end(), consumable));
 }
@@ -1165,8 +1341,9 @@ void Human::useConsumable(Consumable *item)
     this->removeFromInv(item);
 };
 void Human::takeInInv(Item *item)
-{   
-    if (inventory.size() > 5){
+{
+    if (inventory.size() > 5)
+    {
         nextPrompts.push_back("Your inventory is full.");
         return;
     }
@@ -1183,7 +1360,7 @@ string Item::getType()
 }
 
 Weapon::Weapon(string argName, vector<DamageComponent> argMod, vector<string> desc, Human *argOwner, int tu)
-    :Item(argName, desc, argOwner), dcvector(argMod)
+    : Item(argName, desc, argOwner), dcvector(argMod)
 {
     owner = argOwner;
     description = desc;
@@ -1245,7 +1422,8 @@ void Consumable::apply(Entity *entity)
     {
         entity->consumeComponent(v);
     }
-    for (DamageComponent dc: damageComponents){
+    for (DamageComponent dc : damageComponents)
+    {
         entity->takeIntDamage(entity->calculateDmg(dc, 1.0, entity->getmults()));
     }
 }
@@ -1338,7 +1516,7 @@ void Entity::consumeComponent(ValuedComponent *vc)
 }
 
 Human::Human(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv, vector<string> argPrompts, string withstandstr, string weaknessstr, vector<double> argmults)
-    :Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstandstr, weaknessstr, argPrompts, argmults), inventory(argInv) {bname = argName;}
+    : Entity(argName, argAge, argGender, argLVL, argHP, argDMG, withstandstr, weaknessstr, argPrompts, argmults), inventory(argInv) { bname = argName; }
 
 string Human::getType()
 {
@@ -1365,7 +1543,12 @@ vector<Consumable *> Human::getConsumablesInv()
 }
 
 Player::Player(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv, string withstr, string weakstr)
-    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, {}, withstr, weakstr) { inventory = argInv; bname = argName; hp = argHP;}
+    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, {}, withstr, weakstr)
+{
+    inventory = argInv;
+    bname = argName;
+    hp = argHP;
+}
 
 string Player::getType()
 {
@@ -1378,7 +1561,11 @@ string Enemy::getType()
 }
 
 HumanEnemy::HumanEnemy(string argName, int argAge, string argGender, int argLVL, int argHP, int argDMG, vector<Item *> argInv, vector<string> randomprompts, vector<string> stateprs, string withstr, string weakstr, vector<double> argmults)
-    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, randomprompts, withstr, weakstr, argmults) { state_prompts = stateprs; cname = argName;}
+    : Human(argName, argAge, argGender, argLVL, argHP, argDMG, argInv, randomprompts, withstr, weakstr, argmults)
+{
+    state_prompts = stateprs;
+    cname = argName;
+}
 
 string HumanEnemy::getType()
 {
@@ -1418,56 +1605,71 @@ int DamageComponent::simulateDamage(Entity *entity)
     return entity->calculateDmg(*this);
 }
 
-//view module for enemies (entities in general)
-namespace view{
-    string info(Entity* entity){
+// view module for enemies (entities in general)
+namespace view
+{
+    string info(Entity *entity)
+    {
         return entity->getinfo();
     }
 
-    vector<string> showrelics(){
-        vector<string> available_relics ={};
-        for (bool i: relics){
-            if (i){
+    vector<string> showrelics()
+    {
+        vector<string> available_relics = {};
+        for (bool i : relics)
+        {
+            if (i)
+            {
                 available_relics.push_back(relicDescriptions[i]);
             }
         }
         return (available_relics);
     }
 
-    vector<string> getNames(vector<Item*> items){
-        vector<string> names={};
-        for (Item* i: items){
+    vector<string> getNames(vector<Item *> items)
+    {
+        vector<string> names = {};
+        for (Item *i : items)
+        {
             names.push_back(i->getname());
         }
         return names;
     }
 
-    vector<vector<string>> getvv(vector<Item*> items){
-        vector<vector<string>> descsvect={};
-        for (Item* i: items){
+    vector<vector<string>> getvv(vector<Item *> items)
+    {
+        vector<vector<string>> descsvect = {};
+        for (Item *i : items)
+        {
             descsvect.push_back(i->getDesc());
         }
         return descsvect;
     }
 
-    vector<string> getdescs(vector<Item*> items){
-        vector<vector<string>> descsvect={};
-        for (Item* i: items){
+    vector<string> getdescs(vector<Item *> items)
+    {
+        vector<vector<string>> descsvect = {};
+        for (Item *i : items)
+        {
             descsvect.push_back(i->getDesc());
         }
         vector<string> descscs = {};
-        for (vector<string> d: descsvect){
+        for (vector<string> d : descsvect)
+        {
             string s = "";
-            for (int i = 0; i < d.size(); i++){
+            for (int i = 0; i < d.size(); i++)
+            {
                 s.append(d[i]);
             }
             descscs.push_back(s);
-        }   
+        }
         return descscs;
     }
-    string getDescLine(vector<string> vstring){
-        string s="";
-        for (int i = 0; i < vstring.size(); i++){
+    string getDescLine(vector<string> vstring)
+    {
+        string s = "";
+        for (int i = 0; i < vstring.size(); i++)
+        {
             s.append(vstring[i]);
         }
         return s;

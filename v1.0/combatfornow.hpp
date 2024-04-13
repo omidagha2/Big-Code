@@ -1,22 +1,5 @@
 #include "objects2.hpp"
 
-// the fire is liquid
-// enemy gets inventory filled with 5 random consumables, a weapon, and a melee. if possible there can be a guy who holds 2 weapons.
-
-namespace level1enemies
-{
-
-}
-namespace level2enemies
-{
-
-}
-namespace level3enemies
-{
-    // kazem final boss
-    // or maybe mahdi 
-}
-// list of prompts for enemies.
 class Combat
 {
     Player *you;
@@ -27,13 +10,17 @@ public:
     {
         you = player;
         foe = target;
-    } 
+    }
     Player *getPlayer() { return you; }
     Entity *getFoe() { return foe; }
+
+    //adds attack prompt to nextPrompts
     void pushPrompt()
     {
         nextPrompts.push_back(foe->getname() + " attacked you for " + to_string(foe->getDMG()) + " hp!");
     }
+
+    //implementation of enemy's turn
     int foeAttackYou()
     {
         if (auto zomb = dynamic_cast<Zombie *>(foe))
@@ -46,6 +33,8 @@ public:
             runfsm();
         }
     }
+
+    // implementation of player's turn
     int attackFoe()
     {
         you->setCombatTokens(you->getMaxCombatTokens());
@@ -58,7 +47,7 @@ public:
             nps.push_back(foe->getname() + " is looking " + (dynamic_cast<Zombie *>(foe) != nullptr ? "hungry! " : "angry! "));
             nps.push_back(foe->getRandomPrompt());
             vector<string> precombatprompt = {"You have " + to_string(you->getCombatTokens()) + " tokens left.", "What will you do? "};
-            for (string p : precombatprompt)//
+            for (string p : precombatprompt) //
             {
                 nps.push_back(p);
             }
@@ -69,7 +58,7 @@ public:
                 {
                     string pp1, pp2;
                     pp1 = (you->getFireArm())->getname();
-                    auto gun = (dynamic_cast<FireArm*>(you->getFireArm()));
+                    auto gun = (dynamic_cast<FireArm *>(you->getFireArm()));
                     pp2 = (gun->getinfo());
                     // show weapon stats and desc. first stats, then choices, then slowprint desc.
                     if (gun->getAmmo() == 0)
@@ -81,11 +70,13 @@ public:
                     int yn = utils::promptUser({"yes", "no"}, {pp1, pp2}, {(you->getFireArm())->getDesc(), {"You look into " + foe->getname() + "'s eyes.", "Among all the chaos, you can still find some life.", "You consider not attacking, but your cause is still unknown. Is it mercy, or the urge to maximize damage?"}});
                     if (yn == 2)
                         break;
-                    if (you->getFireArm()->getTokenUse() > you->getCombatTokens()){
+                    if (you->getFireArm()->getTokenUse() > you->getCombatTokens())
+                    {
                         utils::slowPrint("You don't have enough tokens to use this weapon.");
                         break;
-                    }    
-                    else{
+                    }
+                    else
+                    {
                         you->setCombatTokens(you->getCombatTokens() - you->getFireArm()->getTokenUse());
                     }
                     int score = you->atkBarGun(0);
@@ -101,16 +92,18 @@ public:
                 {
                     string pp1, pp2, pp3;
                     pp1 = (you->getMelee())->getname();
-                    auto melptr = (dynamic_cast<Melee*>(you->getMelee()));
+                    auto melptr = (dynamic_cast<Melee *>(you->getMelee()));
                     pp2 = (melptr->getinfo());
                     int yn = utils::promptUser({"yes", "no"}, {pp1, pp2}, {(you->getMelee())->getDesc(), {"You look into " + foe->getname() + "'s eyes.", "Despite the chaos, you can still see there's some life in there.", "You consider not attacking, but your cause is still unknown. Is it mercy, or the urge to maximize damage?"}});
                     if (yn == 2)
                         break;
-                    if (you->getMelee()->getTokenUse() > you->getCombatTokens()){
+                    if (you->getMelee()->getTokenUse() > you->getCombatTokens())
+                    {
                         utils::slowPrint("You don't have enough tokens to use this weapon.");
                         break;
-                    }    
-                    else{
+                    }
+                    else
+                    {
                         you->setCombatTokens(you->getCombatTokens() - you->getMelee()->getTokenUse());
                     }
                     int score = you->atkBarMelee(0);
@@ -132,7 +125,11 @@ public:
                         }
                     }
                     Item *cons_choice = consumables.displayAndChooseItem();
-                    if (cons_choice == nullptr){nextPrompts.push_back("You have no items available. "); break;}
+                    if (cons_choice == nullptr)
+                    {
+                        nextPrompts.push_back("You have no items available. ");
+                        break;
+                    }
                     you->consumeConsumable(cons_choice);
                     you->setCombatTokens(you->getCombatTokens() - 1);
                     break;
@@ -148,12 +145,14 @@ public:
                         nextPrompts.push_back(view::showrelics()[i]);
                     }
                 }
-                else you->setCombatTokens(0);
+                else
+                    you->setCombatTokens(0);
                 break;
             }
         }
     }
 
+    //fsm logic for human enemy
     void runfsm()
     {
         HumanEnemy *enemy = dynamic_cast<HumanEnemy *>(foe);
@@ -165,7 +164,7 @@ public:
         const int max_iterations = 3;
 
         while (iterations <= max_iterations)
-        {   
+        {
             nextPrompts.push_back(enemy->getname() + " has moved to the " + enemy->getStateStr() + " State. That means " + enemy->getStateDesc());
             // Entry State: Calculate best weapon and reserve tokens for it.
             if (enemy->getCurrentState() == HumanEnemy::Entry)
@@ -213,7 +212,7 @@ public:
                 if (bestDamageCheap && enemy->getCombatTokens() >= bestDamageCheap->getTokenUse() + enemy->gettabw())
                 {
                     bestDamageCheap->apply(you);
-                    nextPrompts.push_back(enemy->getname() + " used " + bestDamageCheap->getname() + " on " + you->getname() + "! ");                    
+                    nextPrompts.push_back(enemy->getname() + " used " + bestDamageCheap->getname() + " on " + you->getname() + "! ");
                     enemy->usetokens(bestDamageCheap->getTokenUse());
                 }
                 enemy->setCurrentState(HumanEnemy::AreThereTokens);
@@ -236,7 +235,8 @@ public:
                     enemy->setCurrentState(HumanEnemy::Entry);
                     iterations++;
                 }
-                else enemy->setCurrentState(HumanEnemy::Attack);
+                else
+                    enemy->setCurrentState(HumanEnemy::Attack);
             }
 
             if (iterations > max_iterations)
@@ -246,8 +246,9 @@ public:
         }
     }
 
+    //implementation of the game loop. also returns 1 if you (player) die.
     bool gameloop()
-    { // returns 1 if you lose.
+    { 
         bool turn = 1;
         while (foe->isAlive() && you->isAlive())
         {
