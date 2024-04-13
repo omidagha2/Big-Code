@@ -86,51 +86,6 @@ public:
     }
     int damage() {return dmg;}
 };
-class Store {
-private:
-    vector<item*> items; // Store now holds pointers to Item objects
-
-public:
-    // Constructor
-    Store() {
-        items.push_back(new item("Kalashnikov", 1000.0, 10,infinite,infinite, 1));
-        items.push_back(new item("Pistol", 500.0, 20,infinite,infinite, 1));
-        // ... Add other items ...
-    }
-
-    // Destructor to clean up Item objects
-    ~Store() {
-        for (item* item : items) {
-            delete item;
-        }
-    }
-
-    // Print function to display all items
-    void print() const {
-        cout << "Items in store:" << endl;
-        cout << "-----------------------------------------" << endl;
-        cout << "| Item Name     | Price ($) | Quantity |" << endl;
-        cout << "-----------------------------------------" << endl;
-        for (const item* item : items) {
-            item->print();
-        }
-        cout << "-----------------------------------------" << endl;
-    }
-    void reduceQuantity(const string& itemName, int quantityToReduce) {
-        for (item* item : items) {
-            if (item->name == itemName) {
-                if (item->quantity >= quantityToReduce) {
-                    item->quantity -= quantityToReduce;
-                    cout << "Reduced " << quantityToReduce << " " << itemName << "(s) from the store." << endl;
-                } else {
-                    cout << "Insufficient quantity of " << itemName << " in the store." << endl;
-                }
-                return;
-            }
-        }
-        cout << "Item not found in the store." << endl;
-    }
-};
 
 class store:public item {
     vector<item> weapons;
@@ -146,6 +101,7 @@ public:
     }
 
 
+
 };
 
  class entity{
@@ -158,7 +114,6 @@ protected:
     int sta;
 
 public:
-    entity()=default;
     entity() : name(""), age(0), gender(""), lvl(1), hp(100), sta(10){}
     virtual void attack(entity* x,weapon* weapon_at_hand)=0;
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argSTA=0)
@@ -1072,7 +1027,9 @@ public:
 
         if (storyFile.is_open()) {
             while (getline(storyFile, line)) {
+                setConsoleColor(5);
                 cout << line << endl;
+                setConsoleColor(15);
             }
             storyFile.close();
         } else {
