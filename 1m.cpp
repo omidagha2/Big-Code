@@ -6,102 +6,88 @@
 #include <ctime>
 
 using namespace std;
+class characters;
 
 const int SKILLS_IMPLEMENTED = 2;
-int useOfSkill = 0;
-
-
-enum USETYPE{
-    consumable,
-    infinite
-};
-
-enum WPNTYPE{
-    melee,
-    bulletdamage,
-    bow,
-    explosive
-};
-
-enum MOD{
-    common,
-    //...
-};
-
-enum STATE{
-
-};
-enum class BossSkills{
-    FireRocks,
-    SummonHorse,
-    SelfHealing,
-    Vanishing
-};
-
-enum class ZOmbieClasses{
-    Juggernaut,
-    Knight,
-    Intelligent,
-    Theif
-    //maybe some more classes
-};
-
-enum class Behavior{
-    Aggressive,
-    Defensive,
-    // some more behaviors TBD
-};
 
 class item{
-protected:
-    int use_limit;
-    int uses_left;
-    int size;
-
 public:
     string name;
     double price;
     int quantity;
-    string nameofItem(){ cin >> name; return name;}
-    item(string n, double p, int q, int limit, int left, int sz)
-        : name(n), price(p), quantity(q), use_limit(limit), uses_left(left), size(sz) {}
+    item(string n, double p, int q)
+        : name(n), price(p), quantity(q) {}
     item()=default;
-    
-    virtual void print() const {
-        cout << "| " << name << " | $" << price << " | " << quantity << " |" << endl;
-    }
-    string nameof() {return name;}
+    string getName() {return name;}
+    int getQ() {return quantity;}
+    void setQ(int a) {quantity=a;}
+    double getPrice() {return price;}
 };
 
 class weapon: public item{
 protected:
-    MOD modifier;
     int dmg;
-    
-
 public:
     weapon()=default;
-    weapon(string name, MOD argMod, int argDMG, int argSize)
-    :item("",0,0,infinite, infinite, argSize), modifier(argMod), dmg(argDMG) {
+    weapon(string name, int argDMG, double price)
+    :item(name,argDMG,price), dmg(argDMG) {
     }
-    int damage() {return dmg;}
+    int getDamage() {return dmg;}
 };
 
-class store:public item {
-    vector<item> weapons;
+class store:public weapon{
+protected:
+    vector<weapon> weapons;
+    vector<item> items;
 
 public:
-    store(): item("", 0, 0, infinite, infinite, 0){
-        weapons.emplace_back("Kalashnikov",common, 10,1);
-        weapons.emplace_back("pistol",common, 8,1);
-        weapons.emplace_back("graneid",common, 10,1);
-        weapons.emplace_back("sks",common, 20,1);
-        weapons.emplace_back("m14",common, 15,1);
-        weapons.emplace_back("knife",common, 5,1);
+    store(){
+        weapons.emplace_back("Kalashnikov", 10,5);
+        weapons.emplace_back("pistol", 8,5);
+        weapons.emplace_back("graneid", 10,10);
+        weapons.emplace_back("sks", 20,10);
+        weapons.emplace_back("m14", 15,10);
+        weapons.emplace_back("knife", 5,5);
+        items.emplace_back("bondAids",3,10);
+        items.emplace_back("adrenalin",3,10);
+        items.emplace_back("meet",10,10);
+        items.emplace_back("cofee",5,10);
+        items.emplace_back("smoke",3,10);
+
     }
-
-
-
+    void displayStore (string s)
+    {
+        if(s=="weapon"){
+        cout << endl << "weapons at store:\n";
+        for (int i = 1; i <= weapons.size(); i++)
+        {
+            cout << i << ". " << weapons[i-1].getName() << "\ndamage: " << weapons[i-1].getDamage() << " | " << weapons[i-1].price << "$" << endl;  
+        }
+        } else{
+        cout << "Items at store to by:\n";
+        for (int i = 0; i < items.size(); i++)
+        {
+            cout << (i+1) << ". " << items[i].getName() << " | " << items[i].price << "$  | " << items[i].quantity << endl; 
+        }
+        }
+        
+        
+    }
+    item buyItem(){
+        int b;
+            displayStore("item");
+            cin >> b;
+            items[b-1].setQ(items[b-1].getQ()-1);
+            
+            return items[b-1];
+        } 
+    weapon buywep(){
+        int b;
+        displayStore("weapon");
+        cin >> b;
+        weapons[b-1].setQ(weapons[b-1].getQ()-1);
+        return weapons[b-1];
+    }
 };
 
  class entity{
@@ -115,14 +101,13 @@ protected:
 
 public:
     entity() : name(""), age(0), gender(""), lvl(1), hp(100), sta(10){}
-    virtual void attack(entity* x,weapon* weapon_at_hand)=0;
+    // virtual void attack(characters& player,humanEnemies& x,weapon& weapon)=0;
     entity(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argSTA=0)
     :name(argName), age(argAge), gender(argGender), lvl(argLVL), hp(argHP), sta(argSTA){}
     string getName() const {return name;}
-    int getAge() const {return age;}
-    string getGender() const {return gender;}
     int getLvl() const {return lvl;}
     int getSta() const {return sta;}
+    void setSta(int newsta) {sta=newsta;}
     int getHp() const {return hp;}
     void setHp(int newhp)
     {
@@ -144,38 +129,58 @@ protected:
     weapon weapon_at_hand;
     item item_at_hand;
     int coin;
-    vector<vector<string>> inventory={{"weopons"},{"healer Items"},{"throwable Items"}};
-    int skills[SKILLS_IMPLEMENTED];
+    vector<weapon> inventorywep={{"knife", 5,5}};
+    vector<item> inventoryit={{"bondAids",3,10}};
 
 public: 
     human()=default;
     human(string argName, int argAge, string argGender, int argLVL=1, int argHP=0, int argSTA=0,int argCoin=0)
-    : entity(argName, argAge, argGender, argLVL, argHP, argSTA),item_at_hand("",0,0,0,0,0) {
+    : entity(argName, argAge, argGender, argLVL, argHP, argSTA),item_at_hand("",0,0) {
         
     }
-    void attack(entity* x,weapon* weapon_at_hand) override{
-        int a=x->getHp()-weapon_at_hand->damage();
-        x->setHp(a);
-    }
-    item changeHeldItem(string pack) {
-        for (int i = 0; i < 3; i++)
+    void attack(human& player,entity& x,weapon& weapon) {
+        int a = x.getHp()-weapon.getDamage();
+        x.setHp(a);
+        player.setSta(player.getSta()-1);
+        cout << "you have taken "<< a << " damage from your enemy\n";
+        if (a<=0)
         {
-            if (inventory[i][0]==pack)
-            {
-                for (int j = 0; j < inventory[i].size(); j++)
-                {
-                    cout << inventory[i][j] << ",,";
-                }
-                item Item;
-                Item.nameofItem();
-                item_at_hand=Item;
-            }
-            
+            cout << "enemy has died\n";
+            exit(0);
         }
         
+    }
+    weapon changeHeldwep() {
+        int a;
+        for (int i = 0; i < inventorywep.size(); i++)
+        {
+           cout << (i+1) << inventorywep[i].getName() << endl;
+        }
+        cout << "what weapon?\n";
+        cin >> a;
+        weapon_at_hand=inventorywep[a-1];
+        return weapon_at_hand;
+    }
+    item changeHeldit() {
+        int a;
+        for (int i = 0; i < inventoryit.size(); i++)
+        {
+           cout << (i+1) << inventoryit[i].getName() << endl;
+        }
+        cout << "what item?\n";
+        cin >> a;
+        item_at_hand=inventoryit[a-1];
         return item_at_hand;
+
     }
     int getcoin() const {return coin;}
+    void setCoin(int a) {coin=a;}
+    void updateInventory(weapon& i) {
+        inventorywep.push_back(i);
+    }
+    void updateInventorry(item& i) {
+        inventoryit.push_back(i);
+    }
 
 };
 
@@ -185,29 +190,24 @@ public:
    
     characters() {
         // Directly initialize the characters in the constructor
-        chars.emplace_back("Thalion", 20, "Male", 1, 100, 10,1000);
-        chars.emplace_back("Eirwyn", 25, "Male", 1, 110, 20,1000);
-        chars.emplace_back("Brondar", 20, "Male", 1, 120, 30,1000);
-        chars.emplace_back("Mirelle", 20, "Female", 1, 150, 35,1000);
-        chars.emplace_back("Kaelum", 20, "Male", 1, 200, 50,1000);
-        chars.emplace_back("Seraphina", 20, "Female", 1, 190, 45,1000); 
-        chars.emplace_back("Draxen", 20, "Male", 1, 105, 25,1000);
-        chars.emplace_back("Arianya", 20, "Female", 1, 130, 35,1000);
-        chars.emplace_back("Fenris", 20, "Male", 1, 300, 40,1000);
-        chars.emplace_back("Lyrielle", 20, "Female", 1, 500, 100,1000);
+        chars.emplace_back("Thalion", 20, "Male", 1, 50, 10,100);
+        chars.emplace_back("Eirwyn", 25, "Male", 1, 50, 20,100);
+        chars.emplace_back("Brondar", 20, "Male", 1, 100, 30,100);
+        chars.emplace_back("Mirelle", 20, "Female", 1, 50, 35,100);
+        chars.emplace_back("Kaelum", 20, "Male", 1, 40, 50,100);
+        chars.emplace_back("Seraphina", 20, "Female", 1, 45, 45,100); 
+        chars.emplace_back("Draxen", 20, "Male", 1, 35, 25,100);
+        chars.emplace_back("Arianya", 20, "Female", 1, 100, 35,100);
+        chars.emplace_back("Fenris", 20, "Male", 1, 55, 40,100);
+        chars.emplace_back("Lyrielle", 20, "Female", 1, 25, 100,100);
     }
-    human* choice()
+    human choice()
     {
-        int a = 0;
+        int a;
         cout << "\nChoose a character\n";
         displaychars();
         cin >> a;
-        if (a >= 1 && a <= chars.size()) {
-            return &chars[a-1];
-        } else {
-            cout << "Choose between 1-10" << " please...\n";
-            return nullptr; // Return a null pointer if the input is invalid
-        }
+        return chars[a-1];
     }
 
     
@@ -221,10 +221,18 @@ public:
         
     }
 
-    void attack(entity* x,weapon* weapon_at_hand)override {
-        int a=x->getHp()-weapon_at_hand->damage();
-        x->setHp(a);
-        cout << "You have attacked " << x->getName() << " its health is now " << a << " lower.\n";
+    void attack(human& player,entity& x,weapon& weapon){
+        int a = x.getHp()-weapon.getDamage();
+        x.setHp(a);
+        player.setSta(player.getSta()-1);
+        cout << "you have taken "<< a << " damage from your enemy\n";
+        if (a<=0)
+        {
+            cout << "enemy has died\n";
+            exit(0);
+        }
+
+
     }
 
     bool isDefeated() const {
@@ -235,8 +243,8 @@ public:
 };
 
 
-class humanEnemies :public human {
-    vector<human> enemy;
+class humanEnemies :public entity {
+    vector<entity> enemy;
 public:
     humanEnemies() {
         enemy.emplace_back("Stenchurion", 20, "Male", 1, 100, 15);
@@ -246,740 +254,33 @@ public:
         enemy.emplace_back("Bewarewolf", 20, "Male", 1, 100, 10);
         enemy.emplace_back("Lunatick", 20, "Male", 1, 120, 10);
     }
-   
-    void attack(entity* x,weapon* weapon_at_hand)override {
-        int a=x->getHp()-weapon_at_hand->damage();
-        x->setHp(a);
-        cout << "enemy has attacked you, your health is now " << a << " lower.\n"; 
+    entity choose(int a) {
+        return enemy[a];
+    }
+    void attack(human& player,entity& x,weapon& weapon) {
+        int a=player.getHp()-weapon.getDamage();
+        player.setHp(a);
+        x.setSta(x.getSta()-2);
+        cout << "enemy has taken " << a << " damage from you\n";
+        if (a<=0)
+        {
+            cout << "you have died\n";
+            exit(0);
+        }
+
     }
 
     bool isDefeated() const {
 
         return hp <= 0;
     }
+    weapon change(int a) {
+        weapon wep[3]={{"Kalashnikov", 10,5},{"pistol", 8,5},{"graneid", 10,10}};
+        return wep[a];
+    }
 
 };
 //////////////////
-vector<string> randomNames(string& filename){
-
-    ifstream file(filename);
-    vector<string> names;
-    string line;
-
-    while (getline(file , line)){
-        names.push_back(line);
-    }
-
-    file.close();
-    return names;
-}
-
-string getRandomName(vector<string>& names){
-    
-    int index = rand() % names.size();
-    return names[index];
-}
-
-string BossSkillsTostring(BossSkills skill){
-
-    switch (skill){
-
-        case(BossSkills::FireRocks):
-            return "ThrowingObjects";
-        case(BossSkills::SummonHorse):
-            return "SummonHorse";
-        case(BossSkills::SelfHealing):
-            return "SelfHealing";
-        case(BossSkills::Vanishing):
-            return "Vanishing"; 
-        default:
-            return "Unknown";
-    }
-}
-string BehaviorToString(Behavior pattern){
-
-    switch (pattern){
-        
-        case(Behavior::Aggressive):
-            return "Aggressive";
-        case(Behavior::Defensive):
-            return "Defensive";
-        default:
-            return "Uknown";
-    }
-}
-
-string ZombieClassToString(ZOmbieClasses cls){
-
-    switch (cls){
-        
-        case(ZOmbieClasses::Intelligent):
-            return "Intelligent";
-        case(ZOmbieClasses::Juggernaut):
-            return "Juggernaut";
-        case(ZOmbieClasses::Knight):
-            return "Knight";
-        case(ZOmbieClasses::Theif):
-            return "Theif";
-        default:
-            return "Unknown";
-    }
-}
-
-
-
-// class Entity{
-
-// protected:
-
-//     string name , Gender;
-//     int age , hp , Sta , lvl;
-
-// public:
-
-//     Entity() = default;
-//     Entity(string& name , int age , string& gender , int hp , int stamina , int level) : name(name) , age(age) , Gender(gender) , hp(hp) , Sta(stamina) , lvl(level) {} 
-//     Entity(int hp , int stamina , int level) : hp(hp) , Sta(stamina) , lvl(level) {} 
-
-//     virtual void Attack(Entity& target) = 0;
-
-//     bool isDefeated() const {
-
-//         return hp <= 0;
-//     }
-
-//     void updateHP(int damage){
-
-//         hp -= damage;
-//         if (hp < 0){
-
-//             hp = 0;
-//         }
-//     }
-
-
-//     string getName() const {
-//         return name;
-//     }
-//     int getAge() const {
-//         return age;
-//     }
-//     string getGender() const {
-//         return Gender;
-//     }
-//     int getHP() const {
-//         return hp;
-//     }
-//     int getStamina() const {
-//         return Sta;
-//     }
-//     int getLevel() const {
-//         return lvl;
-//     }
-
-
-// };
-
-class Player : public entity{
-
-public:
-
-    Player(string& name , int age , string& gender , int hp , int stamina , int level) : entity(name , age , gender , level , hp, stamina ){}
-
-    void attack(entity* target, weapon* w) override {
-
-        // some code and story tellings
-    }
-
-};
-
-class Enemy : public entity{
-
-protected:
-    
-
-    Behavior Pattern;
-    int Damage , Defense , Stealth , Armor;
-
-    STATE current_state;
-    vector<STATE> available_states;
-
-public:
-
-    Enemy() = default;
-    Enemy(string& name , int age , string gender , int hp , int stamina , int level ,Behavior pattern, int damage , int defense , int stealth , int armor) : 
-    entity(name , age , gender , level, hp, sta) , Pattern(pattern) , Damage(damage) , Defense(defense) , Stealth(stealth) , Armor(armor) {}
-
-    void attack(entity* target,weapon* x) override {
-
-        // some code and story tellings
-    }
-    
-
-
-    int getDamage() const {
-        return Damage;
-    }
-    int getDefense() const {
-        return Defense;
-    }
-    int getStealth() const {
-        return Stealth;
-    }
-    int getArmor() const {
-        return Armor;
-    }
-    Behavior getBehavior() const {
-        return Pattern;
-    }
-
-
-};
-
-
-class Zombie : public Enemy{
-
-protected:
-
-    ZOmbieClasses Cls;
-
-public:
-    
-    Zombie() = default;
-    Zombie(string& name , int age , string& gender , int hp , int stamina , int level , Behavior pattern, int damage , int defense , int stealth , int armor , ZOmbieClasses cls) : 
-    Enemy(name , age , gender , hp , stamina , level , pattern , damage , defense , stealth ,  armor) , Cls(cls) {}
-
-    void attack(entity* target, weapon* x) override {
-
-        int damageTaken = getDamage();
-        updateHP(damageTaken);
-    }
-
-    ZOmbieClasses getZombieCls() const {
-        
-        return Cls;
-    }
-
-    int calcZdmg();
-    int calcZTakenDmg(int tkDmg);  
-};
-
-
-class HumanEnemy : public Player{
-
-    // some code to initialize and etc.
-
-
-};
-
-
-class ZombieBoss : public Zombie{
-
-private:
-
-    BossSkills Skill;
-public:
-    
-    ZombieBoss(string& name , int age , string& gender , int hp , int stamina , int level , Behavior pattern, int damage , int defense , int stealth , int armor , ZOmbieClasses cls , BossSkills skill) :
-        Zombie(name , age , gender , hp , stamina , level , pattern , damage , defense , stealth ,  armor , cls) , Skill(skill) {}
-
-    BossSkills getBossSkill() const{
-        return Skill;
-    }
-    
-    int calcBossDmg(int damg);
-    int calcBossTakenDmg(int tkDmg);
-    void Attack(entity& target);
-
-    void HealBoss(){
-        hp = hp * 1.25;
-    }
-    int damageOfShadow(){
-        return Damage * 1.1;
-    } 
-
-};
-
-int ZombieBoss::calcBossDmg(int damg){    
-    return damg;
-}
-int ZombieBoss::calcBossTakenDmg(int tkDmg){
-
-    if (getBossSkill() == BossSkills::Vanishing){
-                if (useOfSkill < 3){
-                    useOfSkill += 1;
-                }
-                else{
-                    tkDmg = 0;
-                    cout << "Wow Wow , where did the Zombie go? Looks like it disapeared. Missed Shot =((" << endl;
-                    useOfSkill = 0;
-                }
-            }
-
-    return tkDmg; 
-}
-int Zombie::calcZdmg(){
-    return getDamage();
-}
-int Zombie::calcZTakenDmg(int tkDmg){
-    
-    srand(time(nullptr));
-    int randNum = rand() % 10;
-    if (getZombieCls() == ZOmbieClasses::Theif){
-    
-        if (randNum < getStealth()){
-            tkDmg *= 0.8; 
-        }
-    }
-    if (getZombieCls() == ZOmbieClasses::Intelligent){
-       
-       if (randNum < getStealth()){
-            tkDmg *= 0.75; 
-        } 
-    }
-
-    return tkDmg;
-}
-
-void ZombieBoss::Attack(entity& target){
-    
-    if (getBossSkill() == BossSkills::FireRocks){
-
-            if (useOfSkill < 4){
-                //return getDamage();
-                useOfSkill += 1;
-            }
-            else{
-                cout << "Ah oh, Looks like a fire rock is coming to you!!" << endl;
-                // return severe Damage
-                useOfSkill = 0;
-            }
-        }
-        if (getBossSkill() == BossSkills::SummonHorse){
-
-            if (useOfSkill < 4){
-                //return getDamage();
-                useOfSkill += 1;
-            }
-            else{
-                cout << "Oh No!! The Zombie has unleashed its horse and its coming to you!!" << endl;
-                // return severe Damage
-                useOfSkill = 0;
-            }
-        }
-        if (getBossSkill() == BossSkills::SelfHealing){
-
-            if (useOfSkill < 4){
-                useOfSkill += 1;
-            }
-            else{
-                HealBoss();
-                cout << "Wait, What! Did the Zombie just Heal itself? Yep, seems like it's an Intelligent one =))" << endl;
-                useOfSkill = 0;
-                int dm = damageOfShadow();
-                //return getDamage();
-            }
-        }
-        if (getBossSkill() == BossSkills::Vanishing){
-
-            if (useOfSkill < 3){
-                //return getDamage();
-                useOfSkill += 1;
-            }
-            else{
-                cout << "Wow Wow , where did the Zombie go? Looks like it disapeared. Missed Shot =((" << endl;
-                useOfSkill = 0;
-            }
-        }
-    }
-
-class ZombieFactory : public Zombie{
-
-private:
-
-    static Behavior generateBehavior(){
-        int randNum = rand() % 2;
-        Behavior pattern;
-
-        if (randNum == 0) {
-            
-            pattern = Behavior::Aggressive;
-        } 
-        else if (randNum == 1) {
-           
-            pattern = Behavior::Defensive;
-        }
-
-        return pattern;
-    }
-
-    static ZOmbieClasses generateZombieCls(){
-        int randNum = rand() % 4;
-        ZOmbieClasses cls;
-
-        if (randNum == 0) {
-            cls = ZOmbieClasses::Juggernaut;
-        }
-        if (randNum == 1) {
-            cls = ZOmbieClasses::Knight;
-        }
-        if (randNum == 2) {
-            return ZOmbieClasses::Intelligent;
-        }
-        if (randNum == 3) {
-            cls = ZOmbieClasses::Theif;
-        }
-
-        return cls;
-    }
-
-    static BossSkills generateBossSkill(ZOmbieClasses cls){
-
-        BossSkills skill;
-        if (cls == ZOmbieClasses::Intelligent){
-            skill = BossSkills::SelfHealing;
-        }
-        if (cls == ZOmbieClasses::Juggernaut){
-            skill = BossSkills::FireRocks;
-        }
-        if (cls == ZOmbieClasses::Knight){
-            skill = BossSkills::SummonHorse;
-        }
-        if (cls == ZOmbieClasses::Theif){
-            skill = BossSkills::Vanishing;
-        }
-        return skill;
-    }
-
-    static int generateHP(int PlayerHP , Behavior pattern , ZOmbieClasses cls , int RegOrBoss){
-        
-        int ZHP;
-        if (RegOrBoss == 0){
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 10;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP + 5;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 5;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP - 5;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP - 5;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP - 10;
-                }
-            }
-        }
-
-        else{ // generating for the Zombie boss
-
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 35;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP + 30;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 30;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP + 25;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 25;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP + 20;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZHP = PlayerHP + 20;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZHP = PlayerHP + 20;
-                }
-            }  
-        }
-        return ZHP;    
-    }
-
-    static int generateStamina(int PlayerStm , Behavior pattern , ZOmbieClasses cls , int RegOrBoss){
-        int ZStm;
-        if (RegOrBoss == 0){
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.1;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 0.9;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.05;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 0.85;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.1;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 0.9;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.05;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 0.9;
-                }
-            }
-        }
-
-        else{ // generating for the Zombie boss
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.4;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 1.35;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.35;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 1.3;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.3;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 1.25;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZStm = PlayerStm * 1.25;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZStm = PlayerStm * 1.2;
-                }
-            }
-        }
-        return ZStm;
-    }
-
-    static int generateDamage(int PlayerDmg , Behavior pattern , ZOmbieClasses cls , int RegOrBoss){
-        int ZDmg;
-        if (RegOrBoss == 0){
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 1.05;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.2;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.1;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 0.9;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 0.85;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 0.9;
-                }
-            }
-        }
-
-        else{ // generating for zombie boss
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 1.25;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.2;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 1.2;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.15;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 1.15;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.10;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    ZDmg = PlayerDmg * 1.10;
-                }
-                if (pattern == Behavior::Aggressive){
-                    ZDmg = PlayerDmg * 1.10;
-                }
-            }
-        }
-        return ZDmg;
-    }
-    static int generateStealth(int PlayerStl , Behavior pattern , ZOmbieClasses cls , int RegOrBoss){
-        
-        // The numbers are just for examples . TBD
-
-        int Zstl;
-        if (RegOrBoss == 0){
-            if (cls == ZOmbieClasses::Juggernaut){            
-                if (pattern == Behavior::Defensive){
-                    Zstl = PlayerStl * 1.05;
-                }
-                if (pattern == Behavior::Aggressive){
-                    Zstl = PlayerStl * 1.2;
-                }
-            }
-            if (cls == ZOmbieClasses::Knight){            
-                if (pattern == Behavior::Defensive){
-                    Zstl = PlayerStl;
-                }
-                if (pattern == Behavior::Aggressive){
-                    Zstl = PlayerStl * 1.1;
-                }
-            }
-            if (cls == ZOmbieClasses::Intelligent){            
-                if (pattern == Behavior::Defensive){
-                    Zstl = PlayerStl * 0.9;
-                }
-                if (pattern == Behavior::Aggressive){
-                    Zstl = PlayerStl;
-                }
-            }
-            if (cls == ZOmbieClasses::Theif){            
-                if (pattern == Behavior::Defensive){
-                    Zstl = PlayerStl * 0.85;
-                }
-                if (pattern == Behavior::Aggressive){
-                    Zstl = PlayerStl * 0.9;
-                }
-            }
-        }
-        
-        return Zstl;
-    }
-
-    //static int generateDefense(int PlayerDef , Behavior pattern , ZOmbieClasses cls){
-        //int ZDefnse;
-        // Same as above
-        //return ZDefnse;
-
-    //}
-
-
-public:
-
-
-
-    static Zombie createZombie(const entity& player , int RegOrBoss){
-        
-        srand(time(nullptr));
-        string filename = "names.txt";
-        vector<string> ZombieName = randomNames(filename);
-
-            // these are just examples:            
-        Behavior pattern = generateBehavior();
-        ZOmbieClasses cls = generateZombieCls();
-        string name = getRandomName(ZombieName);
-        int age = player.getAge() * 2;
-        string gender = player.getGender();
-        int hp = generateHP(player.getHp() , pattern , cls , RegOrBoss);
-        int stamina = generateStamina(player.getSta() , pattern , cls , RegOrBoss);
-        int level = player.getLvl();
-        int damage = generateDamage(10 , pattern , cls , RegOrBoss);
-        int defense = 0.7;
-        int stealth = generateStealth(0.4 , pattern , cls , RegOrBoss);
-        int armor = 0.1;
-        
-        return Zombie(name , age , gender , hp , stamina , level , pattern  , damage , defense , stealth ,  armor , cls);
-                
-
-        
-    }
-
-    static ZombieBoss createBossZombie(const entity& player , int RegOrBoss){
-
-        srand(time(nullptr));
-        string filename = "names.txt";
-        vector<string> ZombieName = randomNames(filename);
-
-        Behavior pattern = generateBehavior();
-            ZOmbieClasses cls = generateZombieCls();
-            BossSkills skill = generateBossSkill(cls);
-            string name = getRandomName(ZombieName);
-            int age = player.getAge() * 2;
-            string gender = player.getGender();
-            int hp = generateHP(player.getHp() , pattern , cls , RegOrBoss);
-            int stamina = generateStamina(player.getSta() , pattern , cls , RegOrBoss);
-            int level = player.getLvl();
-            int damage = generateDamage(10 , pattern , cls , RegOrBoss);
-            int defense = 0.7;
-            int stealth = generateStealth(0.4 , pattern , cls , RegOrBoss);
-            int armor = 0.1;
-
-            return ZombieBoss(name , age , gender , hp , stamina , level , pattern  , damage , defense , stealth ,  armor , cls , skill);
-    }
-    
-};
-//////////////
 
 void setConsoleColor(int color){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -1040,37 +341,64 @@ public:
         chapter++;
     }
 };
-
+string prompts[5]={"the wolf is here what would you do?\n","a zombie is here what would yo do?\n","a knight is here what would you do?\n","an strong enemy is here what would you do?\n ","the bear is here what would you do?\n"};
 class Game {
 public:
     Game() {
         int y;
         string Name;
         int choice;
-        fstream store("store.txt" , ios::in | ios::out | ios::app);
-        
+        // fstream store("store.txt" , ios::in | ios::out | ios::app);
         cout << "1.existed" << "\n2.customize\n" << "(press \"1\" for choosing amoung existed characters and for customizing press \"2\")";
         cin >> y;
         characters ch;
+        srand(time(0));
+        
         if (y==1)
         {
-            human* selectedCharacter = ch.choice();
-            //store shop;
-            if (selectedCharacter) {
-                StoryHandler story;
+            human selectedCharacter = ch.choice();
+            while(true){
+            int a=rand()%2;
+            if(a==0) {
+                store st;
+                item x=st.buyItem();
+                weapon y=st.buywep();
+                ch.updateInventorry(x);
+                ch.updateInventory(y);
+                
+            } else
+            {
                 while (true)
                 {
-                    story.displayStory();
-                    srand(time(NULL));
-                    while(true) {
-                        int state = rand()%2;
-                        if(state==0)
-                        {
-                            
-                        }
+                    int r=rand()%5;
+                    humanEnemies en;
+                    entity enemy=en.choose(r);
+                    cout << prompts[r];
+                    cout << "1.for attack  2.for healing\n";
+                    
+                    while (enemy.getHp()>=0 || ch.getHp()>=0)
+                    {
+                        int b;
+                        cin >> b;
+                    
+                    if(b==1){
+                        weapon wep=ch.changeHeldwep();
+                        int e=rand()%3;
+                        weapon wepenem=en.change(e);
+
+                        ch.attack(ch,enemy,wep);
+                        int d=rand()%5;
+                        en.attack(ch,enemy,wepenem);
+                        
+                        
+                    }
 
                     }
+
+
                 }
+                
+            }
             
             }
         
@@ -1099,7 +427,8 @@ public:
             cout << "unvalid choice\n";
         }
 
-        }
+        
+    }
 
 };
 class GameModel {
