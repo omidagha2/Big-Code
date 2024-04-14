@@ -10,8 +10,8 @@
 #include <map>
 using namespace std;
 
-const int SP_CHAR_DELAY_DEFAULT = 30;
-const int SP_PAR_DELAY_DEFAULT = 800;
+const int SP_CHAR_DELAY_DEFAULT = 60;
+const int SP_PAR_DELAY_DEFAULT = 1500;
 const bool NOCLS = false;
 
 class DamageComponent;
@@ -199,9 +199,12 @@ namespace utils
     }
 
     //suitable for making menus. Slowly prints prepromt, then the choices, then for each choice a description below. you can move freely between choices
-    int promptUser(vector<string> choices, vector<string> preprompt, vector<vector<string>> choice_descriptions = {}, bool prompt_first = false)
+    int promptUser(vector<string> choices, vector<string> preprompt, vector<vector<string>> choice_descriptions = {}, int choicemargin = 0)
     {
-
+        if (choices.size() < choicemargin){
+            for (int i = 0; i < choicemargin - choices.size(); i++)choices.push_back(".");
+        }
+        while (choice_descriptions.size() < choices.size()) choice_descriptions.push_back({{}});
         slowPrintPrompts(preprompt);
         Sleep(500);
         cout << endl;
@@ -449,7 +452,7 @@ public:
         }
 
         vector<string> preprompt = {"Please choose an item: "};
-        int choice = utils::promptUser(itemNames, preprompt, itemDescriptions);
+        int choice = utils::promptUser(itemNames, preprompt, itemDescriptions, 5);
         return items[choice - 1];
     }
 
@@ -643,6 +646,13 @@ public:
         }
     }
     Player(){};
+
+    //returns true if there's a peanut butter in the inventory
+    bool haspbs();
+
+    void setInv(vector<Item*> inv){
+        inventory = inv;
+    }
 
     //prompts the user with an attack interface, returns an integer based on how good they did. you can change the crosshair,
     // make it so it doesn't show the picture with the characters, or make it so it returns score based on how far it went only.
@@ -1026,6 +1036,15 @@ void Item::setOwner(Human *human)
 {
     owner = human;
 }
+
+bool Player::haspbs(){
+    for (Item* i: inventory){
+        if (i->getname() == "Peanut Butter Sandwich"){
+            return true;
+        }
+    }
+    return false;
+};
 
 Weapon *HumanEnemy::calculateBestWeapon(Player *target)
 {

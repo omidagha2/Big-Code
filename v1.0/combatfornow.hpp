@@ -107,9 +107,9 @@ public:
                         you->setCombatTokens(you->getCombatTokens() - you->getMelee()->getTokenUse());
                     }
                     int score = you->atkBarMelee(0);
-                    cout << "  x" << score / 10.0;
+                    cout << "  x" << score / 4.4;
                     Sleep(500);
-                    foe->getAttacked(you->getMelee(), score / 10.0);
+                    foe->getAttacked(you->getMelee(), score / 4.4);
                     you->setCombatTokens(0);
                     break;
                     // nextPrompts.push_back("You dealt " + to_string(foe->calculateDmgWpn(you->getMelee())) + " damage to " + foe->getname());
