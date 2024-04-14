@@ -37,15 +37,16 @@ int main()
         {
         singleplayer:
             string boyname;
-            slowPrintPrompts({"What's the boy's name? "});
+            slowPrintPrompts({"There's a young boy, sleeping peacefully in a bed. What's the boy's name? "});
             cin >> boyname;
-            int choice = promptUser({"Pancakes", "Peanut butter sandwiches"}, {"What the boy's favorite food?"}, {});
-            Sleep(3);
+            int choice = promptUser({"Pancakes", "Peanut butter sandwiches"}, {"What's the boy's favorite food?"}, {});
+            Sleep(300);
             cls();
             string fav_food = choice == 1 ? "Pancakes" : "Peanut butter sandwiches";
 
             slowPrintPrompts({"You wake up from a refreshing sleep.", "It's an unusually sensual morning.", "The curtains are not drawn. Maybe that's why you slept so well.", "\n", "You make your way down to the living room. On the table, there's a plate of " + fav_food + "! Your favorite breakfast! You take one and save it for later, ood things should not be rushed.", "There's also a piece of paper on the table. Unfortunately, you can't read.", "\n", "You make your way to the couch to watch your favorite cartoon. On your way there, you notice a horrid smell.", "You investigate further. You find the source of the smell must be in the garage. ", "You go to the garage, as unexpecting as possible. Once you get there, you find the source of the smell is~",".",".",".", "~A FREAKING ZOMBIE! which is actually something you knew. It's been rotting away here for as long as you can remember.", "However, this time you notice something new. By the side of the rotting body, there's your favorite childhood toy! The Amazing Laser Gun! You thought it was broken! ", "You pick it up. A rush of memories you've had with it hits you. All the fun, the adventure...","Is this what life is supposed to be? ", "You are inspired. You put the gun in your pocket. You also grab the baseball bat. You go to the front door, and leave the house for the first time in forever, looking for some adventure! "});
-            Sleep(1500);
+            waitForInpt();
+
             slowPrint("A bit later, you make your first encounter of the cruwl real world...");
             Sleep(800);
 
@@ -164,7 +165,7 @@ int main()
                     if (p1.getFireArm()->getname() == "Laser Gun"){
                         slowPrint("As you explore the forest, you come across a peculiar blue object. You don't know what it is, but it looks like it fits perfectly on your laser gun.\nYou attach it to your gun. Your laser gun now freezes enemies! Freezing an enemy reduces their tokens by one. \nIt also comes with a full refill for ammo");
                         p1.setfirearm(dynamic_cast<Weapon*>(Items::getAllPossibleItems()[7]));
-                        Sleep(2000);
+                        waitForInpt();
                     }
                 }
                 else if (choice == 12){
@@ -173,11 +174,11 @@ int main()
                     if (choice == 1){
                         slowPrintPrompts({"The man thanks you (not normally) for lifting his burden of having to deal with a bunch of meting ice creams. ", "He then happily wanders off, free of ice cream. "});
                         p1.setInv({Items::getAllPossibleItems()[2], Items::getAllPossibleItems()[2], Items::getAllPossibleItems()[2], Items::getAllPossibleItems()[2], Items::getAllPossibleItems()[2]});
-                        Sleep(2000);
+                        waitForInpt();
                     }
                     else{
                         slowPrint("You ignore the crazy man and walk away.\n A few seconds later you hear a loud \"NOOOOOOOOOOoooooo\", weakening until the sayer runs out of breath. Those ice creams were definitely cursed. ");
-                    Sleep(2000);
+                    waitForInpt();
                     }
                 }
                 else if (choice == 18){
@@ -285,13 +286,13 @@ int main()
                 if (choice == 1){
                     slowPrintPrompts({"You panic. ","You take out the sandwich and offer it to the zombie."," The zombie in response throws a bite, aiming for your hand, but misses it. However, he catches the peanut butter sandwich.", "Realizing that, he stops. Now, he looks panicked. ", "He takes his eyes off of you. He goes to the highest spot of the hill, sits down, and smiles a horrifying grin. A few moments later, there's a very loud gurgling noise.", "He explodes.~","~ You think he was probably allergic to nuts."});
                     fb = false;
-                    Sleep(2000);
+                    waitForInpt();
                     slowPrintPrompts({"With that part of you gone, now you truly feel relief. You sit back, look at the sky... ", "\n", "and eat the peanut butter sandwich."});
-                    Sleep(2000);
+                    waitForInpt();
                 }
                 else{
                     slowPrint("You try to eat the sandwich as fast as you can. But, that would waste many good seconds, so you stop. You get up, take out your weapons, and fight with all your might!\n");
-                    Sleep(2000);
+                    waitForInpt();
                 }
             }
             if (fb){
@@ -312,7 +313,7 @@ int main()
                         exit(0);
                     }
             slowPrint("With that part of you gone, you can now truly rest. You lay back down, look up at the sky, and imagine your head on the softest cloud, dreaming over and over again...");
-            Sleep(2000);
+            waitForInpt();
             }
             cls();
             
